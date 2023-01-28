@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # local applications
+    'product.apps.ProductConfig',
     # catalog !!!
 
     # 3rd party applications

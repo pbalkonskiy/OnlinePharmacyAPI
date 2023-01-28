@@ -24,8 +24,6 @@ media
 !**/migrations
 !**/migrations/__init__.py
 
-
-
 # AWS User-specific
 .idea/**/aws.xml
 

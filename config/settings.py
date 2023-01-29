@@ -32,7 +32,6 @@ ALLOWED_HOSTS = ['*']
 
 
 # Application definition
-
 INSTALLED_APPS = [
     # django applications
     'django.contrib.admin',
@@ -43,8 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # local applications
-    'product.apps.ProductConfig',
-    # catalog !!!
+    'catalog.apps.CatalogConfig',
 
     # 3rd party applications
     'rest_framework',

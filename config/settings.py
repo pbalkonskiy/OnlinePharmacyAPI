@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     # local applications
     'catalog.apps.CatalogConfig',
+    'cart.apps.CartConfig',
 
     # 3rd party applications
     'rest_framework',

@@ -60,15 +60,24 @@ class Category(models.Model):
         (HEALTHCARE_PRODUCTS, "Healthcare products"),
         (MEDICAL_DEVICES, "Medical devices"),
     ]
+    title = models.CharField(choices=CATEGORIES, max_length=30, primary_key=True)    #стоит ли стаивть primary_key?, не будет ли потом проблем, т.к. строка?
 
-    title = models.CharField(choices=CATEGORIES, max_length=30, primary_key=True)
-    parent_category = models.ForeignKey('self', on_delete=models.CASCADE,
-                                        null=True, blank=True)
 
-    @property
-    def is_subcategory(self) -> bool:
-        """Determines whether the category is a subcategory."""
-        return True if self.parent_category else False
+    # parent_category = models.ForeignKey('self', on_delete=models.CASCADE,            #Was commented: to have parent_category we need to add unnecessary entries
+    #                                     null=True, blank=True)                       #Decision: I created one more choise field for parent_category
+
+
+    PARENT_CATEGORY = [
+        ('MED DEV', 'Medical devices'),
+        ('MED EQ', 'Medical equipment'),
+        ('NONE', None)
+    ]
+    parent_title=models.CharField(choices=PARENT_CATEGORY, max_length=50, null=True, default='None')
+
+    # @property                                                                         #commnted property because i suspect, that we need to save this field
+    # def is_subcategory(self) -> bool:                                                 #in db, in admin panel it won't be displayed, but in db +'
+    #     """Determines whether the category is a subcategory."""
+    #     return True if self.parent_category else False
 
     class Meta:
         verbose_name = 'product category'

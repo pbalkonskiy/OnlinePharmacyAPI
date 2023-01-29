@@ -13,11 +13,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    is_subcategory = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Category
-        fields = ["title", "parent_category", "is_subcategory"]
+        fields = ["title", "parent_title"]
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):

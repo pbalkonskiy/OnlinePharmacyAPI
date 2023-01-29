@@ -14,7 +14,7 @@ class Product(models.Model):
     info = models.TextField()
 
     @property
-    def in_stock(self):
+    def in_stock(self) -> bool:
         in_stock = True if self.amount > 0 else False
         return in_stock
 
@@ -42,22 +42,32 @@ class Manufacturer(models.Model):
 
 
 class Category(models.Model):
+
+    DRUG_PRODUCTS = "DRUG"
+    NUTRITIONAL_SUPPLEMENTS = "NUTR"
+    MEDICAL_PRODUCTS = "MED"
+    COSMETICS = "COSM"
+    OTHER_PRODUCTS = "OTHER"
+    HEALTHCARE_PRODUCTS = "HEALTH"
+    MEDICAL_DEVICES = "DEV"
+
     CATEGORIES = [
-        ("DRUG", "Drug products"),
-        ("NUTR", "Nutritional supplements"),
-        ("MED", "Medical products"),
-        ("COSMETICS", "Cosmetics"),
-        ("OTHER", "Other products"),
-        ("MED / HEALTH", "Healthcare product"),
-        ("MED / DEVICE", "Medical devices"),
+        (DRUG_PRODUCTS, "Drug products"),
+        (NUTRITIONAL_SUPPLEMENTS, "Nutritional supplements"),
+        (MEDICAL_PRODUCTS, "Medical products"),
+        (COSMETICS, "Cosmetics"),
+        (OTHER_PRODUCTS, "Other products"),
+        (HEALTHCARE_PRODUCTS, "Healthcare products"),
+        (MEDICAL_DEVICES, "Medical devices"),
     ]
 
-    title = models.CharField(choices=CATEGORIES, max_length=25)
+    title = models.CharField(choices=CATEGORIES, max_length=30, primary_key=True)
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE,
                                         null=True, blank=True)
 
     @property
-    def is_subcategory(self):
+    def is_subcategory(self) -> bool:
+        """Determines whether the category is a subcategory."""
         return True if self.parent_category else False
 
     class Meta:

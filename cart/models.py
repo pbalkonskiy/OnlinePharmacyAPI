@@ -11,7 +11,6 @@ class Product_template(models.Model):
     def price(self):
         return self.product.price
 
-
     class Meta:
         verbose_name_plural = 'product templates'
         verbose_name = 'product template'
@@ -24,12 +23,12 @@ class Cart(models.Model):
     products = models.ManyToManyField(Product_template, related_name='cart')
 
     @property
-    def numb_of_positions(self)->int:
+    def numb_of_positions(self) -> int:
         return self.products.count()
 
     @property
     def total_price(self):
-        return sum([p.price*p.amount for p in self.products.all()])
+        return sum([p.price * p.amount for p in self.products.all()])
 
     status = models.CharField(max_length=100)
 
@@ -39,4 +38,3 @@ class Cart(models.Model):
 
     def __str__(self):
         return f"{self.id} cart"
-

@@ -3,32 +3,36 @@ from django.db import models
 from catalog.models import Product
 
 
-class Product_template(models.Model):
-    product = models.ForeignKey(Product, related_name='prod_in_cart', on_delete=models.CASCADE)
+class Position(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    cart = models.ForeignKey('Cart', on_delete=models.CASCADE, related_name='position')
     amount = models.IntegerField(default=1)
 
     @property
     def price(self):
-        return self.product.price
+        return self.product.price * self.amount
 
     class Meta:
-        verbose_name_plural = 'product templates'
-        verbose_name = 'product template'
+        verbose_name_plural = 'positions'
+        verbose_name = 'position'
+        default_related_name = 'position'
 
     def __str__(self):
-        return self.product.title
+        return f"{self.product.title} -- cart {self.cart.id}"
 
 
 class Cart(models.Model):
-    products = models.ManyToManyField(Product_template, related_name='cart')
 
     @property
     def numb_of_positions(self) -> int:
-        return self.products.count()
+        return self.position.count()
 
     @property
-    def total_price(self):
-        return sum([p.price * p.amount for p in self.products.all()])
+    def total_price(self):   # don't use price in position cause takes many requests
+        cart_and_positions = self.position.select_related('product')  # use select_releted just for one request
+        amounts = [i.amount for i in cart_and_positions.all()]
+        prices = [i.product.price for i in cart_and_positions.all()]
+        return sum([i * j for i, j in zip(amounts, prices)])
 
     status = models.CharField(max_length=100)
 

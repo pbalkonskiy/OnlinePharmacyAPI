@@ -5,7 +5,7 @@ from catalog.models import Product
 
 class Position(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    cart = models.ForeignKey('Cart', on_delete=models.CASCADE, related_name='position')
+    cart = models.ForeignKey('Cart', on_delete=models.CASCADE, related_name='positions')
     amount = models.IntegerField(default=1)
 
     @property
@@ -22,19 +22,18 @@ class Position(models.Model):
 
 
 class Cart(models.Model):
+    status = models.CharField(max_length=100)
 
     @property
     def numb_of_positions(self) -> int:
-        return self.position.count()
+        return self.positions.count()
 
     @property
     def total_price(self):   # don't use price in position cause takes many requests
-        cart_and_positions = self.position.select_related('product')  # use select_releted just for one request
+        cart_and_positions = self.positions.select_related('product')  # use select_related just for one request
         amounts = [i.amount for i in cart_and_positions.all()]
         prices = [i.product.price for i in cart_and_positions.all()]
         return sum([i * j for i, j in zip(amounts, prices)])
-
-    status = models.CharField(max_length=100)
 
     class Meta:
         verbose_name_plural = 'carts'

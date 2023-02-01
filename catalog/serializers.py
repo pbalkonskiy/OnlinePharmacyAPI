@@ -4,12 +4,12 @@ from catalog.models import Product, Category, Manufacturer
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    in_stock = serializers.BooleanField(source="in_stock", read_only=True)
+    in_stock = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Product
-        # Not convince about this 'fields' attribute. Better test with views later.
-        fields = ["__all__", "in_stock"]
+        fields = ["id", "category", "price", "brand", "manufacturer", "expiration_date",
+                  "addition_date", "barcode", "amount", "info", "in_stock"]
 
 
 class CategorySerializer(serializers.ModelSerializer):

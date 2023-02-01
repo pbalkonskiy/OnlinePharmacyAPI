@@ -31,7 +31,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 
-# Application definition
 INSTALLED_APPS = [
     # django applications
     'django.contrib.admin',
@@ -44,6 +43,7 @@ INSTALLED_APPS = [
     # local applications
     'catalog.apps.CatalogConfig',
     'cart.apps.CartConfig',
+    'order.apps.OrderConfig',
 
     # 3rd party applications
     'rest_framework',

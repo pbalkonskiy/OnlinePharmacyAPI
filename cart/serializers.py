@@ -25,9 +25,9 @@ class PositionSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     positions = PositionSerializer(many=True)
-    number_of_positions = serializers.IntegerField(read_only=True)
+    numb_of_positions = serializers.IntegerField(read_only=True)
     total_price = serializers.DecimalField(decimal_places=2, max_digits=10, read_only=True)
 
     class Meta:
         model = Cart
-        fields = ["id", "status", "positions", "number_of_positions", "total_price"]
+        fields = ["id", "status", "positions", "numb_of_positions", "total_price"]

@@ -46,7 +46,6 @@ class Manufacturer(models.Model):
 
 
 class Category(models.Model):
-
     DRUG_PRODUCTS = "DRUG"
     NUTRITIONAL_SUPPLEMENTS = "NUTR"
     MEDICAL_PRODUCTS = "MED"

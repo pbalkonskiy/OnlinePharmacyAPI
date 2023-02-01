@@ -7,4 +7,3 @@ from users.models import CommonUser, Customer, Employee
 admin.site.register(CommonUser)
 admin.site.register(Customer)
 admin.site.register(Employee)
-

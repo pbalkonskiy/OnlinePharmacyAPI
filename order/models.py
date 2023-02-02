@@ -60,9 +60,9 @@ class Order(models.Model):
 
     @property
     def total_price(self):
-        positions_for = self.positions
-        amounts = [i.amount for i in positions_for.all()]
-        prices = [i.product.price for i in positions_for.all()]
+        order_and_positions = self.positions.prefetch_related("product")  # simplified to only 3 requests
+        amounts = [i.amount for i in order_and_positions.all()]
+        prices = [i.product.price for i in order_and_positions.all()]
         return sum([i * j for i, j in zip(amounts, prices)])
 
     class Meta:

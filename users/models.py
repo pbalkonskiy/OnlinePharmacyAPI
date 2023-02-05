@@ -30,5 +30,5 @@ class Customer(models.Model):
 class Employee(models.Model):
     user = models.OneToOneField(CommonUser, related_name="employee", on_delete=models.CASCADE)
     education = models.TextField(blank=True, null=True)
-    position = models.CharField(max_length=50, blank=True, Null=True)
+    position = models.CharField(max_length=50, blank=True, null=True)
 

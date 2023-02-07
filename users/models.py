@@ -17,7 +17,8 @@ class CommonUser(AbstractUser):
 class Customer(models.Model):
     user = models.OneToOneField(CommonUser, related_name="customer", on_delete=models.CASCADE)
     telephone_number = models.CharField(max_length=20)
-    cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE)
+    cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE,
+                                null=True, blank=True)
     # order = models.ManyToManyField(Order, related_name="customer")
 
     class Meta:

@@ -1,10 +1,12 @@
 from django.db import models
+from django.template.defaultfilters import slugify
 
 from catalog.managers import ProductInStockManager
 
 
 class Product(models.Model):
     title = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100, unique=True, editable=False)
     category = models.ForeignKey('Category', on_delete=models.CASCADE)
     price = models.DecimalField(decimal_places=2, max_digits=10)
     brand = models.CharField(max_length=100)
@@ -30,6 +32,11 @@ class Product(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        self.slug=slugify(self.title)
+        return super().save(*args, **kwargs)
+
 
 
 class Manufacturer(models.Model):
@@ -64,7 +71,10 @@ class Category(models.Model):
         (MEDICAL_DEVICES, "Medical devices"),
     ]
 
-    title = models.CharField(choices=CATEGORIES, max_length=30, primary_key=True)
+    title = models.CharField(choices=CATEGORIES, max_length=30)
+
+    slug = models.SlugField(max_length=100, unique=True, editable=False, primary_key=True)
+
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE,
                                         null=True, blank=True, related_name="subcategories")
 
@@ -73,9 +83,18 @@ class Category(models.Model):
         """Determines whether the category is a subcategory."""
         return True if self.parent_category else False
 
+    @property
+    def parent_title(self):
+        return self.parent_category.title if self.parent_category else None
+
     class Meta:
         verbose_name = 'product category'
         verbose_name_plural = 'product categories'
 
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.title)
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         return self.title
+

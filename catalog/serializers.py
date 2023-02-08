@@ -10,6 +10,12 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ["title", "slug", "is_subcategory", "parent_title"]
+        lookup_field = "slug"  # purposely to add slug into the URL, have to add relevant attributes into views later.
+        extra_kwargs = {
+            "url": {
+                "lookup_field": "slug"
+            }
+        }
 
 
 class SimpleCategorySerializer(serializers.ModelSerializer):
@@ -30,6 +36,12 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ["title", "slug", "category", "price", "brand", "manufacturer", "expiration_date",
                   "addition_date", "barcode", "amount", "info", "is_in_stock"]
+        lookup_field = "slug"
+        extra_kwargs = {
+            "url": {
+                "lookup_field": "slug"
+            }
+        }
 
 
 class SimpleProductSerializer(serializers.ModelSerializer):

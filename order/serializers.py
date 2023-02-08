@@ -5,13 +5,15 @@ from order.models import Order
 
 
 class SimpleOrderSerializer(serializers.ModelSerializer):
-    """Special serializer for the correct optimal display of the order list."""
+    """
+    Special serializer for the correct optimal display of the order list.
+    """
     numb_of_positions = serializers.IntegerField(read_only=True)
     total_price = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Order
-        fields = ["id", "numb_of_positions", "total_price", "date", "payment_status"]
+        fields = ["numb_of_positions", "total_price", "date", "payment_status"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -22,6 +24,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ["id", "positions", "numb_of_positions", "date", "expiration_date",
+        fields = ["positions", "numb_of_positions", "date", "expiration_date",
                   "delivery_method", "payment_method", "payment_status",
                   "address", "post_index", "total_price"]

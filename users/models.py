@@ -13,19 +13,12 @@ class CommonUser(AbstractUser):
     email = models.EmailField(blank=True, null=True)
 
 
-# Create your models here.
 class Customer(models.Model):
     user = models.OneToOneField(CommonUser, related_name="customer", on_delete=models.CASCADE)
     telephone_number = models.CharField(max_length=20)
-<<<<<<< HEAD
-    cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE)
-    order = models.ManyToManyField(Order, related_name="customer")
-=======
+    cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE, null=True)
+    order = models.ManyToManyField(Order, related_name="customer", null=True)
 
-    cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE)
-
-    # order = models.ManyToManyField(Order, related_name="customer")
->>>>>>> 9dcb56a (updated)
 
     class Meta:
         verbose_name = "customer"

@@ -52,13 +52,13 @@ class Manufacturer(models.Model):
 
 
 class Category(models.Model):
-    DRUG_PRODUCTS = "DRUG"
-    NUTRITIONAL_SUPPLEMENTS = "NUTR"
-    MEDICAL_PRODUCTS = "MED"
-    COSMETICS = "COSM"
-    OTHER_PRODUCTS = "OTHER"
-    HEALTHCARE_PRODUCTS = "MED HEALTH"
-    MEDICAL_DEVICES = "MED DEV"
+    DRUG_PRODUCTS = "Drug products"
+    NUTRITIONAL_SUPPLEMENTS = "Nutritional supplements"
+    MEDICAL_PRODUCTS = "Medical products"
+    COSMETICS = "Cosmetics"
+    OTHER_PRODUCTS = "Other products"
+    HEALTHCARE_PRODUCTS = "Healthcare products"
+    MEDICAL_DEVICES = "Medical devices"
 
     CATEGORIES = [
         (DRUG_PRODUCTS, "Drug products"),
@@ -87,7 +87,6 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'product category'
         verbose_name_plural = 'product categories'
-
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.title)

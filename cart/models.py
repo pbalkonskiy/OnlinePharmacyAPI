@@ -29,7 +29,7 @@ class Cart(models.Model):
         return self.positions.count()
 
     @property
-    def total_price(self):   # don't use price in position cause takes many requests
+    def total_price(self):  # don't use price in position cause takes many requests
         cart_and_positions = self.positions.select_related('product')  # use select_related just for one request
         amounts = [i.amount for i in cart_and_positions.all()]
         prices = [i.product.price for i in cart_and_positions.all()]

@@ -1,14 +1,16 @@
+from decimal import Decimal
 from datetime import timedelta
 
 from django.db import models
 
 from cart.models import Position
+from users.models import Customer
 
 
 class Order(models.Model):
     # Delivery methods
-    SELF_DELIVERY = "SELF"
-    DOOR_DELIVERY = "DOOR"
+    SELF_DELIVERY = "Self-delivery"
+    DOOR_DELIVERY = "Door delivery"
 
     DELIVERY_METHODS = [
         (SELF_DELIVERY, "Self-delivery"),
@@ -16,8 +18,8 @@ class Order(models.Model):
     ]
 
     # Payments methods
-    PREPAYMENT = "PRE"
-    UPON_RECEIPT = "PAY"
+    PREPAYMENT = "Prepayment"
+    UPON_RECEIPT = "Upon receipt"
 
     PAYMENT_METHODS = [
         (PREPAYMENT, "Prepayment"),
@@ -25,9 +27,9 @@ class Order(models.Model):
     ]
 
     # Payment status
-    PENDING_PAYMENT = "PENDING"
-    SUCCESSFULLY_PAID = "SUCCESS"
-    UPON_RECEIPT = "UPON_RECEIPT"
+    PENDING_PAYMENT = "Pending payment"
+    SUCCESSFULLY_PAID = "Successfully paid"
+    UPON_RECEIPT = "Payment upon receipt"
 
     PAYMENT_STATUS = [
         (PENDING_PAYMENT, "Pending payment"),
@@ -37,7 +39,7 @@ class Order(models.Model):
 
     # Here will be delivery statuses.
     # Need to discuss it with BA team.
-
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="orders")
     positions = models.ManyToManyField(Position, related_name="order")
     date = models.DateTimeField(auto_now_add=True)
     delivery_method = models.CharField(choices=DELIVERY_METHODS, max_length=15)
@@ -59,7 +61,7 @@ class Order(models.Model):
         return self.positions.count()
 
     @property
-    def total_price(self):
+    def total_price(self) -> Decimal:
         order_and_positions = self.positions.prefetch_related("product")  # simplified to only 3 requests
         amounts = [i.amount for i in order_and_positions.all()]
         prices = [i.product.price for i in order_and_positions.all()]

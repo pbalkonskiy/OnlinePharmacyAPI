@@ -3,7 +3,6 @@ from django.db import models
 
 # from order.models import Order
 from cart.models import Cart
-from order.models import Order
 
 
 class CommonUser(AbstractUser):
@@ -13,19 +12,10 @@ class CommonUser(AbstractUser):
     email = models.EmailField(blank=True, null=True)
 
 
-# Create your models here.
 class Customer(models.Model):
     user = models.OneToOneField(CommonUser, related_name="customer", on_delete=models.CASCADE)
     telephone_number = models.CharField(max_length=20)
-<<<<<<< HEAD
-    cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE)
-    order = models.ManyToManyField(Order, related_name="customer")
-=======
-
-    cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE)
-
-    # order = models.ManyToManyField(Order, related_name="customer")
->>>>>>> 9dcb56a (updated)
+    cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         verbose_name = "customer"
@@ -36,9 +26,36 @@ class Customer(models.Model):
 
 
 class Employee(models.Model):
-    user = models.OneToOneField(CommonUser, related_name="employee", on_delete=models.CASCADE)
+    user = models.OneToOneField(CommonUser, on_delete=models.CASCADE)
     education = models.TextField(blank=True, null=True)
     position = models.CharField(max_length=50, blank=True, null=True)
 
+    class Meta:
+        abstract = True
+
     def __str__(self):
         return self.user.first_name
+
+
+class Administrator(Employee):
+    user = models.OneToOneField(CommonUser, related_name="admin", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Administrator"
+        verbose_name_plural = "Administrators"
+
+
+class ContentManager(Employee):
+    user = models.OneToOneField(CommonUser, related_name="content_manager", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Content Manager"
+        verbose_name_plural = "Content managers"
+
+
+class Consult(Employee):
+    user = models.OneToOneField(CommonUser, related_name="consult", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Consultant"
+        verbose_name_plural = "Consultants"

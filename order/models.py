@@ -4,41 +4,12 @@ from datetime import timedelta
 from django.db import models
 
 from cart.models import Position
+from order.constants import (DELIVERY_METHODS,
+                             PAYMENT_METHODS,
+                             PAYMENT_STATUS)
 
 
 class Order(models.Model):
-    # Delivery methods
-    SELF_DELIVERY = "Self-delivery"
-    DOOR_DELIVERY = "Door delivery"
-
-    DELIVERY_METHODS = [
-        (SELF_DELIVERY, "Self-delivery"),
-        (DOOR_DELIVERY, "Door delivery"),
-    ]
-
-    # Payments methods
-    PREPAYMENT = "Prepayment"
-    UPON_RECEIPT = "Upon receipt"
-
-    PAYMENT_METHODS = [
-        (PREPAYMENT, "Prepayment"),
-        (UPON_RECEIPT, "Upon receipt"),
-    ]
-
-    # Payment status
-    PENDING_PAYMENT = "Pending payment"
-    SUCCESSFULLY_PAID = "Successfully paid"
-    UPON_RECEIPT = "Payment upon receipt"
-
-    PAYMENT_STATUS = [
-        (PENDING_PAYMENT, "Pending payment"),
-        (SUCCESSFULLY_PAID, "Successfully paid"),
-        (UPON_RECEIPT, "Payment upon receipt"),
-    ]
-
-    # Here will be delivery statuses.
-    # Need to discuss it with BA team.
-
     positions = models.ManyToManyField(Position, related_name="order")
     date = models.DateTimeField(auto_now_add=True)
     delivery_method = models.CharField(choices=DELIVERY_METHODS, max_length=15)

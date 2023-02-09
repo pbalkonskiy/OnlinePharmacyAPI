@@ -25,6 +25,13 @@ class Product(models.Model):
     def is_in_stock(self) -> bool:
         return True if self.amount > 0 else False
 
+    @property
+    def url(self) -> str:
+        """Returns product URL for SimpleProductSerializer."""
+        assert self.slug, "Product error." \
+                          "Tried to get product URL, while 'slug' field wasn't defined."
+        return "http://127.0.0.1:8000/catalog/{}".format(self.slug)
+
     class Meta:
         verbose_name = 'product'
         verbose_name_plural = 'products'

@@ -52,10 +52,11 @@ class SimpleProductSerializer(serializers.ModelSerializer):
     price = serializers.FloatField()
     category = SimpleCategorySerializer()
     is_in_stock = serializers.BooleanField(read_only=True)
+    url = serializers.URLField(read_only=True)
 
     class Meta:
         model = Product
-        fields = ["title", "category", "brand", "price", "is_in_stock"]
+        fields = ["url", "title", "category", "brand", "price", "is_in_stock"]
         # added 'in_stock' field in case the product in the cart position
         # is completely sold out to prevent it from getting into the order.
 

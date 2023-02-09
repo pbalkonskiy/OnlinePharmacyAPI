@@ -8,7 +8,6 @@ DELIVERY_METHODS = [
     (DOOR_DELIVERY, "Door delivery"),
 ]
 
-
 # Payments methods
 PREPAYMENT = "Prepayment"
 UPON_RECEIPT = "Upon receipt"
@@ -17,7 +16,6 @@ PAYMENT_METHODS = [
     (PREPAYMENT, "Prepayment"),
     (UPON_RECEIPT, "Upon receipt"),
 ]
-
 
 # Payment status
 PENDING_PAYMENT = "Pending payment"

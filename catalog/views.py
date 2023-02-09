@@ -25,10 +25,13 @@ class CatalogListView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
 
-class CatalogItemView(mixins.RetrieveModelMixin,
-                      generics.GenericAPIView):
+class CatalogRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
+                                      mixins.UpdateModelMixin,
+                                      mixins.DestroyModelMixin,
+                                      generics.GenericAPIView):
     """
-    View for retrieving one specific catalog item.
+    View for retrieving one specific catalog item for observing;
+    updating or deleting catalog items by administration.
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -39,6 +42,15 @@ class CatalogItemView(mixins.RetrieveModelMixin,
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
 
 
 class CatalogCreateItemView(mixins.CreateModelMixin,
@@ -55,4 +67,3 @@ class CatalogCreateItemView(mixins.CreateModelMixin,
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
-    

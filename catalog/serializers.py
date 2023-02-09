@@ -45,13 +45,37 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data) -> Product:
         """
-        Redefined 'create' method specifically for the nested serializer
-        'CategorySerializer' to work in a correct way with all data provided.
+        Overrode 'create' method specifically for the 'category' field with nested serializer.
         """
         category_data = validated_data.pop("category")
         category_instance = Category.objects.get(**category_data)
         product = Product.objects.create(category=category_instance, **validated_data)
         return product
+
+    def update(self, instance, validated_data) -> Product:
+        """
+        Overrode 'create' method specifically for the 'category' field with nested serializer.
+        """
+        category_data = validated_data.pop("category")
+
+        category = instance.category
+        category.title = category_data.get("title", category.title)
+        category.slug = category_data.get("slug", category.slug)
+        category.parent_category = category_data.get("parent_category")
+        category.save()
+
+        instance.title = validated_data.get("title", instance.title)
+        instance.slug = validated_data.get("slug", instance.slug)
+        instance.price = validated_data.get("price", instance.price)
+        instance.brand = validated_data.get("brand", instance.brand)
+        instance.manufacturer = validated_data.get("manufacturer", instance.manufacturer)
+        instance.expiration_date = validated_data.get("expiration_date", instance.expiration_date)
+        instance.barcode = validated_data.get("barcode", instance.barcode)
+        instance.amount = validated_data.get("amount", instance.amount)
+        instance.info = validated_data.get("info", instance.info)
+        instance.save()
+
+        return instance
 
 
 class SimpleProductSerializer(serializers.ModelSerializer):

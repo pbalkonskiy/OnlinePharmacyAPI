@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.db import models
 
 from cart.models import Position
+from users.models import Customer
 
 
 class Order(models.Model):
@@ -38,7 +39,7 @@ class Order(models.Model):
 
     # Here will be delivery statuses.
     # Need to discuss it with BA team.
-
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="orders")
     positions = models.ManyToManyField(Position, related_name="order")
     date = models.DateTimeField(auto_now_add=True)
     delivery_method = models.CharField(choices=DELIVERY_METHODS, max_length=15)

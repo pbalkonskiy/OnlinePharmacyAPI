@@ -1,10 +1,12 @@
 from django.urls import path
 
-from catalog.views import (CatalogListViewSet,
-                           CatalogItemViewSet)
+from catalog.views import (CatalogListView,
+                           CatalogItemView,
+                           CatalogCreateItemView)
 
 
 urlpatterns = [
-    path("catalog/", CatalogListViewSet.as_view({"get": "list"})),
-    path("catalog/<slug:slug>", CatalogItemViewSet.as_view({"get": "retrieve"})),
+    path("", CatalogListView.as_view()),
+    path("new/", CatalogCreateItemView.as_view()),
+    path("<slug:slug>/", CatalogItemView.as_view()),
 ]

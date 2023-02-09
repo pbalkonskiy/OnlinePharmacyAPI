@@ -3,7 +3,7 @@ from rest_framework import pagination
 
 class CatalogListPagination(pagination.PageNumberPagination):
     """
-    Pagination class for CatalogListViewSet.
+    Pagination class for CatalogListView.
     .../catalog/?limit=<'limit' value>
     """
     limit = 5

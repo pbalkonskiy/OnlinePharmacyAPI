@@ -27,7 +27,9 @@ class Product(models.Model):
 
     @property
     def url(self) -> str:
-        """Returns product URL for SimpleProductSerializer."""
+        """
+        Returns product URL for SimpleProductSerializer.
+        """
         assert self.slug, "Product error." \
                           "Tried to get product URL, while 'slug' field wasn't defined."
         return "http://127.0.0.1:8000/catalog/{}".format(self.slug)

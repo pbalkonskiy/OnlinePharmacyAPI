@@ -43,6 +43,16 @@ class ProductSerializer(serializers.ModelSerializer):
             }
         }
 
+    def create(self, validated_data) -> Product:
+        """
+        Redefined 'create' method specifically for the nested serializer
+        'CategorySerializer' to work in a correct way with all data provided.
+        """
+        category_data = validated_data.pop("category")
+        category_instance = Category.objects.get(**category_data)
+        product = Product.objects.create(category=category_instance, **validated_data)
+        return product
+
 
 class SimpleProductSerializer(serializers.ModelSerializer):
     """
@@ -50,7 +60,7 @@ class SimpleProductSerializer(serializers.ModelSerializer):
     with only few required fields.
     """
     price = serializers.FloatField()
-    category = SimpleCategorySerializer()
+    category = SimpleCategorySerializer(read_only=True)
     is_in_stock = serializers.BooleanField(read_only=True)
     url = serializers.URLField(read_only=True)
 

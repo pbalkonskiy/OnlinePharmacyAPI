@@ -3,6 +3,12 @@ from rest_framework import serializers
 from catalog.models import Product, Category, Manufacturer
 
 
+class ManufacturerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Manufacturer
+        exclude = ["id"]
+
+
 class CategorySerializer(serializers.ModelSerializer):
     is_subcategory = serializers.BooleanField(read_only=True)
     parent_title = serializers.CharField(max_length=30, read_only=True)
@@ -30,6 +36,7 @@ class SimpleCategorySerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     price = serializers.FloatField()
     category = CategorySerializer()
+    manufacturer = ManufacturerSerializer()
     is_in_stock = serializers.BooleanField(read_only=True)
 
     class Meta:
@@ -48,8 +55,14 @@ class ProductSerializer(serializers.ModelSerializer):
         Overrode 'create' method specifically for the 'category' field with nested serializer.
         """
         category_data = validated_data.pop("category")
+        manufacturer_data = validated_data.pop("manufacturer")
         category_instance = Category.objects.get(**category_data)
-        product = Product.objects.create(category=category_instance, **validated_data)
+        manufacturer_instance = Manufacturer.objects.get(**manufacturer_data)
+        product = Product.objects.create(
+            category=category_instance,
+            manufacturer=manufacturer_instance,
+            **validated_data
+        )
         return product
 
     def update(self, instance, validated_data) -> Product:
@@ -57,18 +70,23 @@ class ProductSerializer(serializers.ModelSerializer):
         Overrode 'create' method specifically for the 'category' field with nested serializer.
         """
         category_data = validated_data.pop("category")
-
         category = instance.category
         category.title = category_data.get("title", category.title)
         category.slug = category_data.get("slug", category.slug)
         category.parent_category = category_data.get("parent_category")
         category.save()
 
+        manufacturer_data = validated_data.pop("manufacturer")
+        manufacturer = instance.manufacturer
+        manufacturer.name = manufacturer_data.get("name", manufacturer.name)
+        manufacturer.country = manufacturer_data.get("country", manufacturer.country)
+        manufacturer.info = manufacturer_data.get("info", manufacturer.info)
+        manufacturer.save()
+
         instance.title = validated_data.get("title", instance.title)
         instance.slug = validated_data.get("slug", instance.slug)
         instance.price = validated_data.get("price", instance.price)
         instance.brand = validated_data.get("brand", instance.brand)
-        instance.manufacturer = validated_data.get("manufacturer", instance.manufacturer)
         instance.expiration_date = validated_data.get("expiration_date", instance.expiration_date)
         instance.barcode = validated_data.get("barcode", instance.barcode)
         instance.amount = validated_data.get("amount", instance.amount)
@@ -93,9 +111,3 @@ class SimpleProductSerializer(serializers.ModelSerializer):
         fields = ["url", "title", "category", "brand", "price", "is_in_stock"]
         # added 'in_stock' field in case the product in the cart position
         # is completely sold out to prevent it from getting into the order.
-
-
-class ManufacturerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Manufacturer
-        fields = "__all__"

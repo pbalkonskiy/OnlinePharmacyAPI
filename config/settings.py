@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
     # 3rd party applications
     'rest_framework',
+    'drf_yasg',
 ]
 
 REST_FRAMEWORK = {

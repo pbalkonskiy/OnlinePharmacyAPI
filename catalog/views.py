@@ -6,7 +6,6 @@ from catalog.models import Product
 from catalog.serializers import (SimpleProductSerializer,
                                  ProductSerializer)
 from catalog.paginations import CatalogListPagination
-from catalog.permissions import IsAdminOrStuff
 
 
 class CatalogListView(mixins.ListModelMixin,
@@ -62,7 +61,7 @@ class CatalogCreateItemView(mixins.CreateModelMixin,
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (
-        IsAdminOrStuff,
+        permissions.AllowAny,
     )
 
     def post(self, request, *args, **kwargs):

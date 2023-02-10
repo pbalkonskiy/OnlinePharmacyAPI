@@ -2,6 +2,7 @@ from django.db import models
 from django.template.defaultfilters import slugify
 
 from catalog.managers import ProductInStockManager
+from catalog.constants import CATEGORIES
 
 
 class Product(models.Model):
@@ -23,6 +24,15 @@ class Product(models.Model):
     @property
     def is_in_stock(self) -> bool:
         return True if self.amount > 0 else False
+
+    @property
+    def url(self) -> str:
+        """
+        Returns product URL for SimpleProductSerializer.
+        """
+        assert self.slug, "Product error." \
+                          "Tried to get product URL, while 'slug' field wasn't defined."
+        return "http://127.0.0.1:8000/catalog/{}".format(self.slug)
 
     class Meta:
         verbose_name = 'product'
@@ -52,24 +62,6 @@ class Manufacturer(models.Model):
 
 
 class Category(models.Model):
-    DRUG_PRODUCTS = "Drug products"
-    NUTRITIONAL_SUPPLEMENTS = "Nutritional supplements"
-    MEDICAL_PRODUCTS = "Medical products"
-    COSMETICS = "Cosmetics"
-    OTHER_PRODUCTS = "Other products"
-    HEALTHCARE_PRODUCTS = "Healthcare products"
-    MEDICAL_DEVICES = "Medical devices"
-
-    CATEGORIES = [
-        (DRUG_PRODUCTS, "Drug products"),
-        (NUTRITIONAL_SUPPLEMENTS, "Nutritional supplements"),
-        (MEDICAL_PRODUCTS, "Medical products"),
-        (COSMETICS, "Cosmetics"),
-        (OTHER_PRODUCTS, "Other products"),
-        (HEALTHCARE_PRODUCTS, "Healthcare products"),
-        (MEDICAL_DEVICES, "Medical devices"),
-    ]
-
     title = models.CharField(choices=CATEGORIES, max_length=30, )
     slug = models.SlugField(max_length=100, unique=True, editable=False, primary_key=True)
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE,

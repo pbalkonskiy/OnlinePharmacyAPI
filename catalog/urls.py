@@ -1,6 +1,12 @@
-from django.http import HttpResponse
 from django.urls import path
 
+from catalog.views import (CatalogListView,
+                           CatalogRetrieveUpdateDeleteView,
+                           CatalogCreateItemView)
+
+
 urlpatterns = [
-    path('check/', lambda request: HttpResponse('OK')),
+    path("", CatalogListView.as_view()),
+    path("new/", CatalogCreateItemView.as_view()),
+    path("<slug:slug>/", CatalogRetrieveUpdateDeleteView.as_view()),
 ]

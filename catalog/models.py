@@ -62,7 +62,7 @@ class Manufacturer(models.Model):
 
 
 class Category(models.Model):
-    title = models.CharField(choices=CATEGORIES, max_length=30, )
+    title = models.CharField(choices=CATEGORIES, max_length=30)
     slug = models.SlugField(max_length=100, unique=True, editable=False, primary_key=True)
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE,
                                         null=True, blank=True, related_name="subcategories")

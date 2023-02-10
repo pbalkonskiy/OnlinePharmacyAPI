@@ -2,10 +2,13 @@ from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
 
+# from django_filters import rest_framework as filters
+
 from catalog.models import Product
 from catalog.serializers import (SimpleProductSerializer,
                                  ProductSerializer)
 from catalog.paginations import CatalogListPagination
+# from catalog.services import ProductFilter
 
 
 class CatalogListView(mixins.ListModelMixin,
@@ -19,6 +22,9 @@ class CatalogListView(mixins.ListModelMixin,
     permission_classes = (
         permissions.AllowAny,
     )
+
+    # filter_backends = (filters.DjangoFilterBackend,)
+    # filterset_class = ProductFilter
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)

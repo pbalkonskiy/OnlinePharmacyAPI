@@ -4,9 +4,12 @@ from catalog.models import Product
 
 
 class ProductFilter(rest_framework.FilterSet):
-    title = rest_framework.CharFilter(field_name="title", lookup_expr="icontains")
+    """
+    Custom filter to filter products from the catalog by a particular category or brand.
+    Get query parameters in URL like '?category=<category>&brand=<brand>'.
+    """
     brand = rest_framework.CharFilter(field_name="brand", lookup_expr="icontains")
 
     class Meta:
         model = Product
-        fields = ["category", "title", "brand"]
+        fields = ["category", "brand"]

@@ -17,8 +17,7 @@ class CatalogListView(mixins.ListModelMixin,
     """
     View for browsing the catalog as a list of products.
     """
-    queryset = Product.in_stock.all()
-    # Switched to the custom manager to prevent dealing with property.
+    queryset = Product.in_stock.all()  # Only in stock product are listed in catalog.
 
     serializer_class = SimpleProductSerializer
     pagination_class = CatalogListPagination
@@ -26,6 +25,7 @@ class CatalogListView(mixins.ListModelMixin,
         permissions.AllowAny,
     )
 
+    # Filter parameters for 'django_filters.rest_framework'.
     filter_backends = (
         rest_framework.DjangoFilterBackend,
         filters.SearchFilter,
@@ -33,9 +33,10 @@ class CatalogListView(mixins.ListModelMixin,
     )
     filterset_class = ProductFilter
 
+    # Search & ordering parameters for 'rest_framework.filters'.
     search_fields = ("^title",)
-    ordering_fields = ("price",)  # Ascending / descending ordering by 'price'.
-    ordering = ("-addition_date",)  # Lately added are on top.
+    ordering_fields = ("price",)
+    ordering = ("-addition_date",)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)

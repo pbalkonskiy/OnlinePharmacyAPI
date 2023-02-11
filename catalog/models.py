@@ -18,6 +18,7 @@ class Product(models.Model):
     amount = models.IntegerField()
     info = models.TextField(blank=True)
 
+    # Product model managers
     objects = models.Manager()
     in_stock = ProductInStockManager()
 
@@ -30,8 +31,10 @@ class Product(models.Model):
         """
         Returns product URL for SimpleProductSerializer.
         """
-        assert self.slug, "Product error." \
-                          "Tried to get product URL, while 'slug' field wasn't defined."
+        try:
+            assert self.slug
+        except AttributeError:
+            raise Exception("Product error. Tried to get product URL, while 'slug' field wasn't defined.")
         return "http://127.0.0.1:8000/catalog/{}".format(self.slug)
 
     class Meta:
@@ -69,7 +72,9 @@ class Category(models.Model):
 
     @property
     def is_subcategory(self) -> bool:
-        """Determines whether the category is a subcategory."""
+        """
+        Determines whether the category is a subcategory.
+        """
         return True if self.parent_category else False
 
     @property

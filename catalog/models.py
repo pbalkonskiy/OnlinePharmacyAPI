@@ -16,7 +16,7 @@ class Product(models.Model):
     addition_date = models.DateField(auto_now_add=True)
     barcode = models.CharField(max_length=50)
     amount = models.IntegerField()
-    info = models.TextField()
+    info = models.TextField(blank=True)
 
     objects = models.Manager()
     in_stock = ProductInStockManager()
@@ -51,7 +51,7 @@ class Product(models.Model):
 class Manufacturer(models.Model):
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
-    info = models.TextField()
+    info = models.TextField(blank=True)
 
     class Meta:
         verbose_name = 'manufacturer'

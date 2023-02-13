@@ -52,48 +52,46 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data) -> Product:
         """
-        Overrode 'create' method specifically for the 'category' field with nested serializer.
+        Overriden 'create' method specifically for the 'category' & 'manufacturer'
+        fields with nested serializer (POST).
         """
         category_data = validated_data.pop("category")
+        category = Category.objects.get(**category_data)
+
         manufacturer_data = validated_data.pop("manufacturer")
-        category_instance = Category.objects.get(**category_data)
-        manufacturer_instance = Manufacturer.objects.get(**manufacturer_data)
-        product = Product.objects.create(
-            category=category_instance,
-            manufacturer=manufacturer_instance,
-            **validated_data
+        manufacturer = Manufacturer.objects.get(**manufacturer_data)
+
+        return Product.objects.create(
+            category=category,
+            manufacturer=manufacturer,
+            **validated_data,
         )
-        return product
 
     def update(self, instance, validated_data) -> Product:
         """
-        Overrode 'create' method specifically for the 'category' field with nested serializer.
+        Overriden 'update' method specifically for the 'category' & 'manufacturer'
+        fields with nested serializer (PUT & PATCH).
         """
-        category_data = validated_data.pop("category")
-        category = instance.category
-        category.title = category_data.get("title", category.title)
-        category.slug = category_data.get("slug", category.slug)
-        category.parent_category = category_data.get("parent_category")
-        category.save()
+        assert validated_data.get("category"), "Category nested serializer error."
+        assert validated_data.get("manufacturer"), "Manufacturer nested serializer error."
 
-        manufacturer_data = validated_data.pop("manufacturer")
-        manufacturer = instance.manufacturer
-        manufacturer.name = manufacturer_data.get("name", manufacturer.name)
-        manufacturer.country = manufacturer_data.get("country", manufacturer.country)
-        manufacturer.info = manufacturer_data.get("info", manufacturer.info)
-        manufacturer.save()
+        category_data, manufacturer_data = validated_data.get("category"), validated_data.get("manufacturer")
 
-        instance.title = validated_data.get("title", instance.title)
-        instance.slug = validated_data.get("slug", instance.slug)
-        instance.price = validated_data.get("price", instance.price)
-        instance.brand = validated_data.get("brand", instance.brand)
-        instance.expiration_date = validated_data.get("expiration_date", instance.expiration_date)
-        instance.barcode = validated_data.get("barcode", instance.barcode)
-        instance.amount = validated_data.get("amount", instance.amount)
-        instance.info = validated_data.get("info", instance.info)
-        instance.save()
+        category_serializer = CategorySerializer(data=category_data)
+        manufacturer_serializer = ManufacturerSerializer(data=manufacturer_data)
 
-        return instance
+        if category_serializer.is_valid() and manufacturer_serializer.is_valid():
+            category = category_serializer.update(
+                instance=instance.category,
+                validated_data=category_serializer.validated_data
+            )
+            manufacturer = manufacturer_serializer.update(
+                instance=instance.manufacturer,
+                validated_data=manufacturer_serializer.validated_data
+            )
+            validated_data["category"], validated_data["manufacturer"] = category, manufacturer
+
+        return super().update(instance, validated_data)
 
 
 class SimpleProductSerializer(serializers.ModelSerializer):
@@ -109,5 +107,5 @@ class SimpleProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ["url", "title", "category", "brand", "price", "is_in_stock"]
-        # added 'in_stock' field in case the product in the cart position
+        # added 'is_in_stock' field in case the product in the cart position
         # is completely sold out to prevent it from getting into the order.

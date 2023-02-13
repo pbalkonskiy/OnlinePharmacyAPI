@@ -1,11 +1,15 @@
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
+from rest_framework import filters
+
+from django_filters import rest_framework
 
 from catalog.models import Product
 from catalog.serializers import (SimpleProductSerializer,
                                  ProductSerializer)
 from catalog.paginations import CatalogListPagination
+from catalog.services import ProductFilter
 
 
 class CatalogListView(mixins.ListModelMixin,
@@ -13,12 +17,26 @@ class CatalogListView(mixins.ListModelMixin,
     """
     View for browsing the catalog as a list of products.
     """
-    queryset = Product.objects.all()
+    queryset = Product.in_stock.all()  # Only in stock product are listed in catalog.
+
     serializer_class = SimpleProductSerializer
     pagination_class = CatalogListPagination
     permission_classes = (
         permissions.AllowAny,
     )
+
+    # Filter parameters for 'django_filters.rest_framework'.
+    filter_backends = (
+        rest_framework.DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    )
+    filterset_class = ProductFilter
+
+    # Search & ordering parameters for 'rest_framework.filters'.
+    search_fields = ("^title",)
+    ordering_fields = ("price",)
+    ordering = ("-addition_date",)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -55,7 +73,7 @@ class CatalogRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
 class CatalogCreateItemView(mixins.CreateModelMixin,
                             generics.GenericAPIView):
     """
-    View for creating, updating and deleting a product in catalog.
+    View for creating a new product.
     Originally allowed for resource administrations & managers stuff only.
     """
     queryset = Product.objects.all()

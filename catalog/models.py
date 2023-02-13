@@ -16,8 +16,9 @@ class Product(models.Model):
     addition_date = models.DateField(auto_now_add=True)
     barcode = models.CharField(max_length=50)
     amount = models.IntegerField()
-    info = models.TextField()
+    info = models.TextField(blank=True)
 
+    # Product model managers
     objects = models.Manager()
     in_stock = ProductInStockManager()
 
@@ -30,8 +31,10 @@ class Product(models.Model):
         """
         Returns product URL for SimpleProductSerializer.
         """
-        assert self.slug, "Product error." \
-                          "Tried to get product URL, while 'slug' field wasn't defined."
+        try:
+            assert self.slug
+        except AttributeError:
+            raise Exception("Product error. Tried to get product URL, while 'slug' field wasn't defined.")
         return "http://127.0.0.1:8000/catalog/{}".format(self.slug)
 
     class Meta:
@@ -51,7 +54,7 @@ class Product(models.Model):
 class Manufacturer(models.Model):
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
-    info = models.TextField()
+    info = models.TextField(blank=True)
 
     class Meta:
         verbose_name = 'manufacturer'
@@ -62,14 +65,16 @@ class Manufacturer(models.Model):
 
 
 class Category(models.Model):
-    title = models.CharField(choices=CATEGORIES, max_length=30, )
+    title = models.CharField(choices=CATEGORIES, max_length=30)
     slug = models.SlugField(max_length=100, unique=True, editable=False, primary_key=True)
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE,
                                         null=True, blank=True, related_name="subcategories")
 
     @property
     def is_subcategory(self) -> bool:
-        """Determines whether the category is a subcategory."""
+        """
+        Determines whether the category is a subcategory.
+        """
         return True if self.parent_category else False
 
     @property

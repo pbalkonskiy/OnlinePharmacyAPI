@@ -6,7 +6,6 @@ from drf_yasg import openapi
 from django.contrib import admin
 from django.urls import path, include, re_path
 
-
 schema_view = get_schema_view(
     openapi.Info(
         title="Snippets API",
@@ -22,7 +21,6 @@ schema_view = get_schema_view(
     ],
 )
 
-
 urlpatterns = [
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -34,4 +32,18 @@ urlpatterns = [
     path('cart/', include('cart.urls')),
     path('order/', include('order.urls')),
     path('users/', include('users.urls')),
+
+    path('auth/', include('djoser.urls')),
+    re_path(r'^auth/', include('djoser.urls.authtoken')),  # authorization
+    path('auth/', include('djoser.urls.jwt')),
+
+    # path("api/accounts/", include("users.urls")),
 ]
+
+"""
+      http://127.0.0.1:8000/auth/token/login - user login
+      http://127.0.0.1:8000/auth/token/logout - user logout
+      http://127.0.0.1:8000/auth/users/ - a list of users and create a new user
+      /auth/jwt/create/ - create a JWT token
+      /auth/jwt/refresh/ - get a new JWT after the lifetime of the previously generated one has expired
+"""

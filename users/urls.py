@@ -8,7 +8,7 @@ urlpatterns = [
     path('check/', lambda request: HttpResponse('OK')),
     path('customers/', CustomerViewList.as_view()),  # endpoint to get list of customers
     path('new_customer/', CustomerCreateView.as_view()),  # endpoint to create a new one customer
-    path('customer/<str:email>', CustomerRetrieveUpdateDeleteView.as_view()),  # endpoint to update or delete
+    path('customer/<slug:slug>', CustomerRetrieveUpdateDeleteView.as_view()),  # endpoint to update or delete
 ]
 
 """

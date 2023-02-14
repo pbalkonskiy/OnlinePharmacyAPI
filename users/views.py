@@ -29,7 +29,7 @@ class CustomerRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
                                        mixins.DestroyModelMixin,
                                        generics.GenericAPIView):
     queryset = Customer.objects.all()
-    lookup_field = 'email'
+    lookup_field = 'slug'
     serializer_class = CustomerSerializer
     permission_classes = (
         permissions.AllowAny,

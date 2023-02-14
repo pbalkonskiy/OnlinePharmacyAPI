@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User, AbstractUser
 from django.db import models
+from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 # from order.models import Order
@@ -16,19 +17,21 @@ class CommonUser(AbstractUser):
     slug = models.SlugField(max_length=150, unique=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('first_name', 'last_name')
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     def __str__(self):
-        return self.first_name
+        return self.slug
 
-    # def save(self, *args, **kwargs):
-    #     print(f'kvargs: {kwargs}')
-    #     return super(CommonUser, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        slug_data = self.email.split('@')[0]
+        self.slug = slugify(slug_data)
+        return super(CommonUser, self).save(*args, **kwargs)
 
 
 class Customer(models.Model):
     user = models.OneToOneField(CommonUser, related_name="customer", on_delete=models.CASCADE, null=True)
-    email = models.EmailField(max_length=254, unique=True)
+    #email = models.EmailField(max_length=254, unique=True)
+    slug = models.SlugField(max_length=150, unique=True)
     telephone_number = models.CharField(max_length=20)
     cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE, null=True, blank=True)
 
@@ -37,7 +40,11 @@ class Customer(models.Model):
         verbose_name_plural = "customers"
 
     def __str__(self):
-        return self.user.first_name
+        return self.slug
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.user.slug)
+        return super(Customer, self).save(*args, **kwargs)
 
 
 class Employee(models.Model):

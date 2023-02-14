@@ -6,30 +6,32 @@ from users.models import CommonUser, Customer, Employee
 
 class CommonUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    slug = serializers.SlugField(read_only=True)
 
     class Meta:
         model = CommonUser
-        fields = ("email", "password", "first_name", "last_name", "patronymic",)
+        fields = ("email", "slug", "password", "first_name", "last_name", "patronymic",)
 
-        lookup_field = "email"
+        lookup_field = "slug"
         extra_kwargs = {
             "url": {
-                "lookup_field": "email"
+                "lookup_field": "slug"
             }
         }
 
 
 class CustomerSerializer(serializers.ModelSerializer):
     user= CommonUserSerializer()
+    slug = serializers.SlugField(read_only=True)
 
     class Meta:
         model = Customer
-        fields = ('user', 'telephone_number')
+        fields = ('user', 'slug', 'telephone_number')
 
-        lookup_field = "email"
+        lookup_field = "slug"
         extra_kwargs = {
             "url": {
-                "lookup_field": "email"
+                "lookup_field": "slug"
             }
         }
 
@@ -42,7 +44,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         NewCommonUser = CommonUser(**CommonUser_data)
         NewCommonUser.set_password(CommonUser_data['password'])
         NewCommonUser.save()
-        NewCustomer = Customer.objects.create(user=NewCommonUser, email=CommonUser_data.get('email'), **validated_data)
+        NewCustomer = Customer.objects.create(user=NewCommonUser, **validated_data)
         return NewCustomer
 
     def update(self, instance, validated_data):

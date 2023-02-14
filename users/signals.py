@@ -15,8 +15,8 @@ def delete_customer(sender, instance, **kwargs):
     instance.user.delete()
 
 
-@receiver(pre_save, sender=Customer)
-def change_email(sender, instance, **kwargs):
-    print(instance.user.email)
-    instance.email = instance.user.email
-
+# @receiver(pre_save, sender=Customer)
+# def change_email(sender, instance, **kwargs):
+#     print(instance.user.email)
+#     instance.email = instance.user.email
+#

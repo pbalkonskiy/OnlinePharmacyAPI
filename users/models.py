@@ -7,18 +7,19 @@ from cart.models import Cart
 
 
 class CommonUser(AbstractUser):
-    username = models.CharField(_("username"), max_length=30, null=True, blank=True, default=None)
+    username = models.CharField(_("username"), max_length=30, null=True, blank=True, default=None, unique=False)
     email = models.EmailField(max_length=254, unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     patronymic = models.CharField(max_length=150, null=True, blank=True)
     last_login = models.DateTimeField(_("last login"), blank=True, null=True, auto_now=True)
+    slug = models.SlugField(max_length=150, unique=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
+    REQUIRED_FIELDS = ('first_name', 'last_name')
 
     def __str__(self):
-        return self.email
+        return self.first_name
 
     # def save(self, *args, **kwargs):
     #     print(f'kvargs: {kwargs}')

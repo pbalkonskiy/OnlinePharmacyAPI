@@ -20,7 +20,7 @@ class EmployeeAdmin(admin.ModelAdmin):
 
 
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'telephone_number', 'cart')
+    list_display = ('id', 'user', 'email', 'telephone_number', 'cart')
     list_display_links = ('user',)
     list_editable = ('telephone_number',)
 

@@ -155,6 +155,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
+#
+# ACCOUNT_USERNAME_REQUIRED = False    # This removes the username field
+# ACCOUNT_AUTHENTICATION_METHOD = 'email'
+# ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_UNIQUE_EMAIL = True
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -175,3 +182,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+

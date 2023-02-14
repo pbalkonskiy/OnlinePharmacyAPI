@@ -7,6 +7,7 @@ from cart.models import Cart
 
 
 class CommonUser(AbstractUser):
+    username = models.CharField(_("username"), max_length=30, null=True, blank=True, default=None)
     email = models.EmailField(max_length=254, unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
@@ -17,19 +18,18 @@ class CommonUser(AbstractUser):
     REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     def __str__(self):
-        return self.username
+        return self.email
 
-    def save(self, *args, **kwargs):
-        print(f'kvargs: {kwargs}')
-        return super(CommonUser, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     print(f'kvargs: {kwargs}')
+    #     return super(CommonUser, self).save(*args, **kwargs)
 
 
 class Customer(models.Model):
-    user = models.OneToOneField(CommonUser, related_name="customer", on_delete=models.CASCADE)
+    user = models.OneToOneField(CommonUser, related_name="customer", on_delete=models.CASCADE, null=True)
     email = models.EmailField(max_length=254, unique=True)
     telephone_number = models.CharField(max_length=20)
     cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE, null=True, blank=True)
-
 
     class Meta:
         verbose_name = "customer"

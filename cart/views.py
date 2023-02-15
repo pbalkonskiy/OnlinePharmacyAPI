@@ -4,11 +4,13 @@ from rest_framework import permissions
 from rest_framework import response
 
 from cart.models import Cart, Position
-from cart.serializers import CartSerializer
+from cart.serializers import (CartSerializer,
+                              PositionSerializer,
+                              AddPositionSerializer)
 
 
-class CartRetrieveUpdateClearView(mixins.RetrieveModelMixin,
-                                  mixins.UpdateModelMixin,
+class CartRetrieveUpdateClearView(mixins.CreateModelMixin,
+                                  mixins.ListModelMixin,
                                   mixins.DestroyModelMixin,
                                   generics.GenericAPIView):
     """
@@ -23,9 +25,28 @@ class CartRetrieveUpdateClearView(mixins.RetrieveModelMixin,
 
     def get(self, request, *args, **kwargs):
         """
-        Returns (retrieves) data from the cart object with ID passed to the URL.
+        Lists data from positions related to the cart object.
         """
-        return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Used to add new / update previously added positions related to the cart.
+        """
+        return self.create(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Position.objects.filter(cart_id=self.kwargs["pk"]).all()
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return AddPositionSerializer
+        return PositionSerializer
+
+    def get_serializer_context(self):
+        return {
+            "cart_id": self.kwargs["pk"]
+        }
 
     def delete(self, request, *args, **kwargs):
         """

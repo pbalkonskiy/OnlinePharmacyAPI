@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from users.models import CommonUser, Customer, Administrator, ContentManager, Consult
+from users.models import CommonUser, Customer, Employee
 
 
 # Register your models here.
@@ -14,7 +14,7 @@ class CommonUserAdmin(admin.ModelAdmin):
 
 
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'position',)
+    list_display = ('id', 'slug', 'user', 'position',)
     list_editable = ('position',)
     list_filter = ('user', 'position',)
 
@@ -29,6 +29,5 @@ class CustomerAdmin(admin.ModelAdmin):
 
 admin.site.register(CommonUser, CommonUserAdmin)
 admin.site.register(Customer, CustomerAdmin)
-admin.site.register(Administrator, EmployeeAdmin)
-admin.site.register(ContentManager, EmployeeAdmin)
-admin.site.register(Consult, EmployeeAdmin)
+admin.site.register(Employee, EmployeeAdmin)
+

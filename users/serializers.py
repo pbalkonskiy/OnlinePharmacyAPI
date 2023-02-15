@@ -21,7 +21,7 @@ class CommonUserSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    user= CommonUserSerializer()
+    user = CommonUserSerializer()
     slug = serializers.SlugField(read_only=True)
 
     class Meta:
@@ -51,23 +51,6 @@ class CustomerSerializer(serializers.ModelSerializer):
         """
         Overrode 'update' method specifically for the 'customer' field with nested serializer.
         """
-        # CommonUser_data = validated_data.pop('user')
-        # UpdatedCommonUser = instance.user
-        # UpdatedCommonUser.username = CommonUser_data.get('username', UpdatedCommonUser.username)
-        # UpdatedCommonUser.email = CommonUser_data.get('email', UpdatedCommonUser.email)
-        # UpdatedCommonUser.password = CommonUser_data.get('password', UpdatedCommonUser.password)
-        # UpdatedCommonUser.first_name = CommonUser_data.get('first_name', UpdatedCommonUser.first_name)
-        # UpdatedCommonUser.last_name = CommonUser_data.get('last_name', UpdatedCommonUser.last_name)
-        # UpdatedCommonUser.patronymic = CommonUser_data.get('patronymic', UpdatedCommonUser.patronymic)
-        # UpdatedCommonUser.save()
-        #
-        # instance.telephone_number = validated_data.get('telephone_number', instance.telephone_number)
-        # instance.email = CommonUser_data.get('email', instance.email)
-        # instance.save()
-        #
-        # return instance
-
-        print('checked')
 
         user_data = validated_data.pop('user')
         user_serializer = CommonUserSerializer(instance=instance.user, data=user_data, partial=True)
@@ -78,8 +61,36 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 class EmployeeSerializer(serializers.ModelSerializer):
     user = CommonUserSerializer()
+    slug = serializers.SlugField(read_only=True)
 
     class Meta:
         model = Employee
+        fields = ('user', 'slug', 'education', 'position')
 
-        fields = ('user', 'education', 'position')
+        lookup_field = "slug"
+        extra_kwargs = {
+            "url": {
+                "lookup_field": "slug"
+            }
+        }
+
+    def create(self, validated_data) -> (Employee, CommonUser):
+        """
+        Overrode 'create' method specifically for the 'employee' field with nested serializer.
+        """
+        UserData = validated_data.pop('user')
+        NewCommonUser = CommonUser(**UserData)
+        NewCommonUser.set_password(UserData['password'])
+        NewCommonUser.save()
+        NewEmployee = Employee.objects.create(user=NewCommonUser, **validated_data)
+        return NewEmployee
+
+    def update(self, instance, validated_data):
+        """
+        Overrode 'update' method specifically for the 'employee' field with nested serializer.
+        """
+        user_data = validated_data.pop('user')
+        user_serializer = CommonUserSerializer(instance=instance.user, data=user_data, partial=True)
+        if user_serializer.is_valid():
+            user_serializer.update(instance.user, user_data)
+        return super().update(instance, validated_data)

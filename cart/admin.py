@@ -3,8 +3,7 @@ from django.contrib import admin
 from cart.models import Position, Cart
 
 class CartAdmin(admin.ModelAdmin):
-    list_display = ('id', 'status', 'numb_of_positions', 'total_price')
-    list_filter = ('status',)
+    list_display = ('id', 'numb_of_positions', 'total_price')
 
 class PositionAdmin(admin.ModelAdmin):
     list_display = ('id', 'product', 'amount', 'price')

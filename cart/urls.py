@@ -1,6 +1,8 @@
-from django.http import HttpResponse
 from django.urls import path
 
+from cart.views import CartRetrieveUpdateClearView
+
+
 urlpatterns = [
-    path('check/', lambda request: HttpResponse('OK')),
+    path("<int:pk>/", CartRetrieveUpdateClearView.as_view()),
 ]

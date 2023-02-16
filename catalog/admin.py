@@ -7,6 +7,7 @@ from catalog.models import Product, Category, Manufacturer
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
         "title",
+        "slug",
         "category",
         "price",
         "brand",

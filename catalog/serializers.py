@@ -71,6 +71,7 @@ class ProductSerializer(serializers.ModelSerializer):
         """
         Overriden 'update' method specifically for the 'category' & 'manufacturer'
         fields with nested serializer (PUT & PATCH).
+        Overrode 'update' method specifically for the 'category' field with nested serializer.
         """
         assert validated_data.get("category"), "Category nested serializer error."
         assert validated_data.get("manufacturer"), "Manufacturer nested serializer error."

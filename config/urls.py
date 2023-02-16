@@ -6,7 +6,6 @@ from drf_yasg import openapi
 from django.contrib import admin
 from django.urls import path, include, re_path
 
-
 schema_view = get_schema_view(
     openapi.Info(
         title="Snippets API",
@@ -22,7 +21,6 @@ schema_view = get_schema_view(
     ],
 )
 
-
 urlpatterns = [
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -34,4 +32,6 @@ urlpatterns = [
     path('cart/', include('cart.urls')),
     path('order/', include('order.urls')),
     path('users/', include('users.urls')),
+
 ]
+

@@ -9,16 +9,47 @@ from cart.serializers import (CartSerializer,
                               AddPositionSerializer)
 
 
-class CartRetrieveUpdateClearView(mixins.CreateModelMixin,
-                                  mixins.ListModelMixin,
-                                  mixins.DestroyModelMixin,
-                                  generics.GenericAPIView):
+class CartRetrieveClearView(mixins.RetrieveModelMixin,
+                            mixins.DestroyModelMixin,
+                            generics.GenericAPIView):
+    """
+    Pass.
+    """
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+    permission_classes = (
+        permissions.AllowAny,
+    )
+
+    def get(self, request, *args, **kwargs):
+        """
+        Provides data from the specific cart object based on 'CartSerializer'.
+        """
+        return self.retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Clears the cart or deletes all positions, related to the cart object
+        using overridden 'destroy' method that returns cleared cart.
+        """
+        return self.destroy(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        cart_instance = self.get_object()
+        serializer = self.get_serializer(cart_instance)
+        for position in cart_instance.positions.all():
+            Position.objects.get(id=position.id).delete()
+        return response.Response(serializer.data)
+
+
+class CartUpdateView(mixins.CreateModelMixin,
+                     mixins.ListModelMixin,
+                     generics.GenericAPIView):
     """
     Cart retrieve info, update and clear view. Originally allowed for
     customer (owner) and administration.
     """
     queryset = Cart.objects.all()
-    serializer_class = CartSerializer
     permission_classes = (
         permissions.AllowAny,
     )
@@ -47,17 +78,3 @@ class CartRetrieveUpdateClearView(mixins.CreateModelMixin,
         return {
             "cart_id": self.kwargs["pk"]
         }
-
-    def delete(self, request, *args, **kwargs):
-        """
-        Clears the cart or deletes all positions, related to the cart object
-        using overridden 'destroy' method that returns cleared cart.
-        """
-        return self.destroy(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        cart_instance = self.get_object()
-        serializer = self.get_serializer(cart_instance)
-        for position in cart_instance.positions.all():
-            Position.objects.get(id=position.id).delete()
-        return response.Response(serializer.data)

@@ -68,16 +68,45 @@ class AddPositionSerializer(serializers.ModelSerializer):
 
 class UpdatePositionSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
+    amount = serializers.IntegerField(min_value=1)
+
+    def validate_id(self, value):
+        """
+        Check if the position exists in the cart and get the related product.
+        """
+        try:
+            position = Position.objects.get(id=value)
+        except Position.DoesNotExist:
+            raise serializers.ValidationError("Position does not exist in the cart.")
+
+        product = position.product
+        self.context["product"] = product  # Save the related product for later use
+
+        return value
+
+    def validate_amount(self, value):
+        product = self.context.get("product")
+        if product is not None and value > product.amount:
+            raise serializers.ValidationError("Amount cannot exceed the available stock.")
+        return value
+
+    def save(self, **kwargs):
+        self.is_valid(raise_exception=True)
+        cart_id = self.context["user_id"]
+        amount = self.validated_data["amount"]
+        position_id = self.validated_data["id"]
+        try:
+            cart_item = Position.objects.get(id=position_id, cart_id=cart_id)
+            cart_item.amount = amount
+            cart_item.save()
+            self.instance = cart_item
+        except Position.DoesNotExist:
+            self.instance = Position.objects.create(id=position_id, cart_id=cart_id, amount=amount)
+        return self.instance
 
     class Meta:
         model = Position
         fields = ["id", "amount"]
-
-    def validate(self, data):
-        amount = data.get('amount', None)
-        if amount is not None and amount > self.instance.product.amount:
-            raise serializers.ValidationError("Amount cannot be greater than the available amount")
-        return data
 
 
 class CartSerializer(serializers.ModelSerializer):

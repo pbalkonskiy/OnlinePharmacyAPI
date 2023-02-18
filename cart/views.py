@@ -6,14 +6,14 @@ from rest_framework import response
 from cart.models import Cart, Position
 from cart.serializers import (CartSerializer,
                               PositionSerializer,
-                              AddPositionSerializer)
+                              UpdatePositionSerializer)
 
 
-class CartRetrieveClearView(mixins.RetrieveModelMixin,
-                            mixins.DestroyModelMixin,
-                            generics.GenericAPIView):
+class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
+                                         mixins.DestroyModelMixin,
+                                         generics.GenericAPIView):
     """
-    Pass.
+    ...
     """
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
@@ -42,12 +42,11 @@ class CartRetrieveClearView(mixins.RetrieveModelMixin,
         return response.Response(serializer.data)
 
 
-class CartUpdateView(mixins.CreateModelMixin,
-                     mixins.ListModelMixin,
-                     generics.GenericAPIView):
+class CartListUpdatePositionsView(mixins.ListModelMixin,
+                                  mixins.UpdateModelMixin,
+                                  generics.GenericAPIView):
     """
-    Cart retrieve info, update and clear view. Originally allowed for
-    customer (owner) and administration.
+    ...
     """
     queryset = Cart.objects.all()
     permission_classes = (
@@ -60,21 +59,37 @@ class CartUpdateView(mixins.CreateModelMixin,
         """
         return self.list(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        """
-        Used to add new / update previously added positions related to the cart.
-        """
-        return self.create(request, *args, **kwargs)
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
 
     def get_queryset(self):
         return Position.objects.filter(cart_id=self.kwargs["pk"]).all()
 
     def get_serializer_class(self):
-        if self.request.method == "POST":
-            return AddPositionSerializer
+        if self.request.method == "PATCH":
+            return UpdatePositionSerializer
         return PositionSerializer
 
     def get_serializer_context(self):
         return {
-            "cart_id": self.kwargs["pk"]
+            "user_id": self.kwargs["pk"]
         }
+
+
+class CartDeletePositionsView(mixins.RetrieveModelMixin,
+                              mixins.DestroyModelMixin,
+                              generics.GenericAPIView):
+    """
+    ...
+    """
+    queryset = Position.objects.all()
+    serializer_class = PositionSerializer
+    permission_classes = (
+        permissions.AllowAny,
+    )
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)

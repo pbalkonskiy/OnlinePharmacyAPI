@@ -41,7 +41,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["title", "slug", "category", "price", "brand", "manufacturer", "expiration_date",
+        fields = ["id", "title", "slug", "category", "price", "brand", "manufacturer", "expiration_date",
                   "addition_date", "barcode", "amount", "info", "is_in_stock"]
         lookup_field = "slug"
         extra_kwargs = {
@@ -73,9 +73,6 @@ class ProductSerializer(serializers.ModelSerializer):
         fields with nested serializer (PUT & PATCH).
         Overrode 'update' method specifically for the 'category' field with nested serializer.
         """
-        assert validated_data.get("category"), "Category nested serializer error."
-        assert validated_data.get("manufacturer"), "Manufacturer nested serializer error."
-
         category_data, manufacturer_data = validated_data.get("category"), validated_data.get("manufacturer")
 
         category_serializer = CategorySerializer(data=category_data)
@@ -107,6 +104,6 @@ class SimpleProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["url", "title", "category", "brand", "price", "is_in_stock"]
+        fields = ["id", "url", "title", "category", "brand", "price", "is_in_stock"]
         # added 'is_in_stock' field in case the product in the cart position
         # is completely sold out to prevent it from getting into the order.

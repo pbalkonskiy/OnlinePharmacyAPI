@@ -1,6 +1,12 @@
-from django.http import HttpResponse
 from django.urls import path
 
+from cart.views import (CartRetrieveDeleteAllPositionsView,
+                        CartListUpdatePositionsView,
+                        CartDeletePositionsView)
+
+
 urlpatterns = [
-    path('check/', lambda request: HttpResponse('OK')),
+    path("<int:pk>/", CartRetrieveDeleteAllPositionsView.as_view()),
+    path("<int:pk>/items/", CartListUpdatePositionsView.as_view()),
+    path("<int:pk>/items/<slug:slug>/", CartDeletePositionsView.as_view()),
 ]

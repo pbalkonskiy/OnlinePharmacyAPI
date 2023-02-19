@@ -22,7 +22,8 @@ class Position(models.Model):
 
 
 class Cart(models.Model):
-    status = models.CharField(max_length=100)
+    creation_date = models.DateTimeField(auto_now_add=True)
+    update_date = models.DateTimeField(auto_now=True)
 
     @property
     def numb_of_positions(self) -> int:

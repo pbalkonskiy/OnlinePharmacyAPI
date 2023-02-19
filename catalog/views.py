@@ -6,16 +6,22 @@ from rest_framework import filters
 from django_filters import rest_framework
 
 from catalog.models import Product
-from catalog.serializers import (SimpleProductSerializer,
-                                 ProductSerializer)
 from catalog.paginations import CatalogListPagination
 from catalog.services import ProductFilter
+from catalog.serializers import (SimpleProductSerializer,
+                                 ProductSerializer)
+
+from cart.serializers import (AddPositionSerializer,)
 
 
-class CatalogListView(mixins.ListModelMixin,
+class CatalogListView(mixins.CreateModelMixin,
+                      mixins.ListModelMixin,
                       generics.GenericAPIView):
     """
     View for browsing the catalog as a list of products.
+
+    Also allows user to add products to the cart based on creating new positions using the POST
+    request method. Required cart ID is set based on the ID of the user sending the requests.
     """
     queryset = Product.in_stock.all()  # Only in stock product are listed in catalog.
 
@@ -40,6 +46,28 @@ class CatalogListView(mixins.ListModelMixin,
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Used to add new positions to the cart, in case the user is a customer,
+        and he is signed in.
+        """
+        return self.create(request, *args, **kwargs)
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return AddPositionSerializer
+        return self.serializer_class
+
+    def get_serializer_context(self):
+        """
+        Adding the customer ID to the serializer context in case of "POST" request.
+        """
+        context = super(CatalogListView, self).get_serializer_context()
+        if self.get_serializer_class() == AddPositionSerializer:
+            context["user_id"] = self.request.user.customer.id
+            context["product_id"] = self.request.data.get("product_id")
+        return context
 
 
 class CatalogRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,

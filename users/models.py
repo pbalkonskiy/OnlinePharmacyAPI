@@ -15,7 +15,7 @@ class CommonUser(AbstractUser):
     last_name = models.CharField(max_length=150)
     patronymic = models.CharField(max_length=150, null=True, blank=True)
     last_login = models.DateTimeField(_("last login"), blank=True, null=True, auto_now=True)
-    slug = models.SlugField(max_length=150, unique=True)
+    slug = models.SlugField(max_length=150, unique=True, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
@@ -31,7 +31,7 @@ class CommonUser(AbstractUser):
 
 class Customer(models.Model):
     user = models.OneToOneField(CommonUser, related_name="customer", on_delete=models.CASCADE, null=True)
-    slug = models.SlugField(max_length=150, unique=True)
+    slug = models.SlugField(max_length=150, unique=True, null=True, blank=True)
     telephone_number = models.CharField(max_length=20)
     cart = models.OneToOneField(Cart, related_name="customer", on_delete=models.CASCADE, null=True, blank=True)
 
@@ -49,7 +49,7 @@ class Customer(models.Model):
 
 class Employee(models.Model):
     user = models.OneToOneField(CommonUser, on_delete=models.CASCADE)
-    slug = models.SlugField(max_length=150, unique=True)
+    slug = models.SlugField(max_length=150, unique=True, null=True, blank=True)
     education = models.TextField(blank=True, null=True)
     position = models.CharField(choices=POSITION, max_length=50)
 

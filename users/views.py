@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions, mixins
 from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
 
 from users.models import Customer, Employee
 from users.serializers import CustomerSerializer, EmployeeSerializer
@@ -49,6 +50,8 @@ class CustomerRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
         return self.destroy(request, *args, **kwargs)
 
 
+
+
 class EmployeeViewList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
@@ -56,6 +59,7 @@ class EmployeeViewList(mixins.ListModelMixin, generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
 
 
 class EmployeeCreateView(mixins.RetrieveModelMixin, generics.CreateAPIView):
@@ -84,3 +88,7 @@ class EmployeeRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+class ClSAP(generics.GenericAPIView):
+    pass

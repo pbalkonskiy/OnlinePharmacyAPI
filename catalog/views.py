@@ -84,3 +84,4 @@ class CatalogCreateItemView(mixins.CreateModelMixin,
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+

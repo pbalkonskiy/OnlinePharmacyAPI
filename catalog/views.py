@@ -19,6 +19,9 @@ class CatalogListView(mixins.CreateModelMixin,
                       generics.GenericAPIView):
     """
     View for browsing the catalog as a list of products.
+
+    Also allows user to add products to the cart based on creating new positions using the POST
+    request method. Required cart ID is set based on the ID of the user sending the requests.
     """
     queryset = Product.in_stock.all()  # Only in stock product are listed in catalog.
 

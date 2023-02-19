@@ -13,7 +13,8 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
                                          mixins.DestroyModelMixin,
                                          generics.GenericAPIView):
     """
-    ...
+    View that retrieves user's cart based on 'CartSerializer', so it also
+    provides cart ID, total positions number and total price.
     """
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
@@ -38,7 +39,7 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
         cart_instance = self.get_object()
         serializer = self.get_serializer(cart_instance)
         for position in cart_instance.positions.all():
-            Position.objects.get(id=position.id).delete()
+            position.delete()
         return response.Response(serializer.data)
 
 
@@ -46,7 +47,8 @@ class CartListUpdatePositionsView(mixins.ListModelMixin,
                                   mixins.UpdateModelMixin,
                                   generics.GenericAPIView):
     """
-    ...
+    View allows to observe the cart positions list based on the 'PositionSerializer'
+    and to update one specific position's parameters using PATCH request method.
     """
     queryset = Cart.objects.all()
     permission_classes = (
@@ -60,6 +62,9 @@ class CartListUpdatePositionsView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
+        """
+        Allows to update parameters of a specific position object from the cart.
+        """
         return self.partial_update(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -80,7 +85,7 @@ class CartDeletePositionsView(mixins.RetrieveModelMixin,
                               mixins.DestroyModelMixin,
                               generics.GenericAPIView):
     """
-    ...
+    View retrieves one position from the cart. Allows to delete it from the cart.
     """
     queryset = Position.objects.all()
     serializer_class = PositionSerializer

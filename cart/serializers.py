@@ -16,10 +16,6 @@ class PositionSerializer(serializers.ModelSerializer):
         fields = ["id", "slug", "cart", "product", "price", "amount"]
 
 
-class DoesNotExist:
-    pass
-
-
 class AddPositionSerializer(serializers.ModelSerializer):
     product_id = serializers.IntegerField()
 
@@ -72,7 +68,7 @@ class UpdatePositionSerializer(serializers.ModelSerializer):
 
     def validate_id(self, value):
         """
-        Check if the position exists in the cart and get the related product.
+        Checks if the position exists in the cart and get the related product.
         """
         try:
             position = Position.objects.get(id=value)
@@ -85,6 +81,10 @@ class UpdatePositionSerializer(serializers.ModelSerializer):
         return value
 
     def validate_amount(self, value):
+        """
+        Checks if the passed in PATCH request method 'amount' value not exceed the 'amount'
+        field value of the related product from the 'Product' table.
+        """
         product = self.context.get("product")
         if product is not None and value > product.amount:
             raise serializers.ValidationError("Amount cannot exceed the available stock.")

@@ -12,7 +12,7 @@ def create_customer_cart(sender, instance, created, **kwargs):
     with an id (pk) field corresponding to the id (pk) of the new Customer.
     """
     if created:
-        cart = Cart.objects.create(id=instance.id, status="OK")
+        cart = Cart.objects.create(id=instance.id)
         instance.cart = cart
         instance.save()
 

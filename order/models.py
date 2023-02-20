@@ -1,12 +1,13 @@
 from decimal import Decimal
-from datetime import timedelta
 
 from django.db import models
 
 from order.constants import (DELIVERY_METHODS,
                              PAYMENT_METHODS,
                              PAYMENT_STATUS)
+
 from cart.models import Position
+
 from users.models import Customer
 
 
@@ -21,14 +22,6 @@ class Order(models.Model):
     post_index = models.IntegerField(null=True, blank=True)
 
     @property
-    def expiration_date(self) -> date:
-        """
-        Returns the expiration date of the order.
-        The order will be automatically reset when the deadline for payment in the day expires.
-        """
-        return self.date + timedelta(days=1)
-
-    @property
     def numb_of_positions(self) -> int:
         return self.positions.count()
 
@@ -38,6 +31,14 @@ class Order(models.Model):
         amounts = [i.amount for i in order_and_positions.all()]
         prices = [i.product.price for i in order_and_positions.all()]
         return sum([i * j for i, j in zip(amounts, prices)])
+
+    @property
+    def key(self) -> str:
+        return f"{(hash(self.date))}"[1::5]
+
+    @property
+    def url(self) -> str:
+        return "http://127.0.0.1:8000/orders/{}/{}/".format(self.customer.id, self.id)
 
     class Meta:
         ordering = ["date"]

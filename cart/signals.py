@@ -41,10 +41,3 @@ def delete_cart_positions(sender, instance, created, **kwargs):
             instance.save()
             position.cart = None
             position.save()
-
-
-@receiver(signals.post_delete, sender=Order)
-def restore_cart_positions(sender, instance, **kwargs):
-    for position in instance.positions.all():
-        position.cart = instance.customer.id
-        position.save()

@@ -7,6 +7,7 @@ from order.models import Order
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
         "id",
+        "key",
         "customer_id",
         "numb_of_positions",
         "total_price",

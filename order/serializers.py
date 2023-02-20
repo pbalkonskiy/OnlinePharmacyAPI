@@ -13,7 +13,7 @@ class SimpleOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ["numb_of_positions", "total_price", "date", "payment_status"]
+        fields = ["id", "numb_of_positions", "total_price", "date", "payment_status"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -24,6 +24,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ["positions", "numb_of_positions", "date", "expiration_date",
-                  "delivery_method", "payment_method", "payment_status",
-                  "address", "post_index", "total_price"]
+        fields = ["id", "customer_id", "positions", "numb_of_positions", "total_price", "date",
+                  "expiration_date", "delivery_method", "payment_method", "payment_status", "address",
+                  "post_index"]

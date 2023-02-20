@@ -8,14 +8,23 @@ from cart.serializers import (CartSerializer,
                               PositionSerializer,
                               UpdatePositionSerializer)
 
+from order.models import Order
+from order.serializers import OrderSerializer
+
 
 class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
+                                         mixins.CreateModelMixin,
                                          mixins.DestroyModelMixin,
                                          generics.GenericAPIView):
     """
     View that retrieves user's cart based on 'CartSerializer', so it also
-    provides cart ID, total positions number and total price.
+    provides cart ID, total positions number and total price (GET).
+
+    Among other things, the view gives the ability to erase all items from the cart.
+
+    The key function of the view is to create a customer order based on the added product positions.
     """
+
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
     permission_classes = (
@@ -27,6 +36,21 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
         Provides data from the specific cart object based on 'CartSerializer'.
         """
         return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Used to create new record in the 'Order' model filled with added cart positions.
+        """
+        return self.create(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Used to create new 'Order' exemplar based on customer ID.
+        """
+        order = Order.objects.create(customer=request.user.customer)
+        order.save()
+        serializer = OrderSerializer(order)
+        return response.Response(serializer.data)
 
     def delete(self, request, *args, **kwargs):
         """
@@ -41,6 +65,12 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
         for position in cart_instance.positions.all():
             position.delete()
         return response.Response(serializer.data)
+
+    def get_serializer_class(self):
+        method = self.request.method
+        if method == "GET" or method == "DELETE":
+            return self.serializer_class
+        return OrderSerializer
 
 
 class CartListUpdatePositionsView(mixins.ListModelMixin,

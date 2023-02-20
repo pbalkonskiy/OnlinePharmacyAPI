@@ -5,7 +5,7 @@ from catalog.models import Product
 
 class Position(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    cart = models.ForeignKey('Cart', on_delete=models.CASCADE, related_name='positions')
+    cart = models.ForeignKey('Cart', on_delete=models.CASCADE, related_name='positions', null=True, blank=True)
     amount = models.IntegerField(default=1)
 
     @property
@@ -18,7 +18,10 @@ class Position(models.Model):
         default_related_name = 'position'
 
     def __str__(self):
-        return f"{self.product.title} -- cart {self.cart.id}"
+        try:
+            return f"{self.product.title} -- ID {self.cart.id}"
+        except AttributeError:
+            return f"{self.product.title} -- in order."
 
 
 class Cart(models.Model):

@@ -12,13 +12,13 @@ from users.models import Customer
 
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="orders")
-    positions = models.ManyToManyField(Position, related_name="order")
+    positions = models.ManyToManyField(Position, related_name="order", blank=True)
     date = models.DateTimeField(auto_now_add=True)
-    delivery_method = models.CharField(choices=DELIVERY_METHODS, max_length=15)
-    payment_method = models.CharField(choices=PAYMENT_METHODS, max_length=20)
-    payment_status = models.CharField(choices=PAYMENT_STATUS, max_length=20)
-    address = models.TextField(null=True)
-    post_index = models.IntegerField(null=True)
+    delivery_method = models.CharField(choices=DELIVERY_METHODS, max_length=15, null=True, blank=True)
+    payment_method = models.CharField(choices=PAYMENT_METHODS, max_length=20, null=True, blank=True)
+    payment_status = models.CharField(choices=PAYMENT_STATUS, max_length=20, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    post_index = models.IntegerField(null=True, blank=True)
 
     @property
     def expiration_date(self) -> date:

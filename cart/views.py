@@ -9,7 +9,7 @@ from cart.serializers import (CartSerializer,
                               UpdatePositionSerializer)
 
 from order.models import Order
-from order.serializers import OrderSerializer
+from order.serializers import AddSimpleOrderSerializer
 
 
 class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
@@ -24,7 +24,6 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
 
     The key function of the view is to create a customer order based on the added product positions.
     """
-
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
     permission_classes = (
@@ -49,7 +48,7 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
         """
         order = Order.objects.create(customer=request.user.customer)
         order.save()
-        serializer = OrderSerializer(order)
+        serializer = AddSimpleOrderSerializer(order)
         return response.Response(serializer.data)
 
     def delete(self, request, *args, **kwargs):
@@ -70,7 +69,7 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
         method = self.request.method
         if method == "GET" or method == "DELETE":
             return self.serializer_class
-        return OrderSerializer
+        return AddSimpleOrderSerializer
 
 
 class CartListUpdatePositionsView(mixins.ListModelMixin,
@@ -80,7 +79,7 @@ class CartListUpdatePositionsView(mixins.ListModelMixin,
     View allows to observe the cart positions list based on the 'PositionSerializer'
     and to update one specific position's parameters using PATCH request method.
     """
-    queryset = Cart.objects.all()
+    serializer_class = PositionSerializer
     permission_classes = (
         permissions.AllowAny,
     )
@@ -103,7 +102,7 @@ class CartListUpdatePositionsView(mixins.ListModelMixin,
     def get_serializer_class(self):
         if self.request.method == "PATCH":
             return UpdatePositionSerializer
-        return PositionSerializer
+        return self.serializer_class
 
     def get_serializer_context(self):
         return {
@@ -122,6 +121,7 @@ class CartDeletePositionsView(mixins.RetrieveModelMixin,
     permission_classes = (
         permissions.AllowAny,
     )
+    lookup_field = "product__slug"
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

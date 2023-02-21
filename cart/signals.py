@@ -3,7 +3,7 @@ from django.dispatch import receiver
 
 from users.models import Customer
 
-from cart.models import Cart
+from cart.models import Cart, Position
 
 from order.models import Order
 
@@ -41,3 +41,11 @@ def delete_cart_positions(sender, instance, created, **kwargs):
             instance.save()
             position.cart = None
             position.save()
+
+
+@receiver(signals.pre_delete, sender=Order)
+def update_cart_on_order_delete(sender, instance, **kwargs):
+    cart = Cart.objects.get(id=instance.customer.id)
+    for position in instance.positions.all():
+        position.cart = cart
+        position.save()

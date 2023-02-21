@@ -54,7 +54,7 @@ class OrderSerializer(serializers.ModelSerializer):
         }
 
 
-class AddOrderSerializer(serializers.ModelSerializer):
+class CheckOutOrderSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
 
     def save(self, **kwargs):
@@ -86,7 +86,7 @@ class AddOrderSerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         """
-        If the passed 'post_index' number not longer than 6 symbols.
+        If passed 'post_index' number not longer than 6 symbols.
         """
         if len(str(value)) > 6:
             raise serializers.ValidationError("Post index should not be longer than 6 symbols.")

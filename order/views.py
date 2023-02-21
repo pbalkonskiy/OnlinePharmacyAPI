@@ -4,7 +4,8 @@ from rest_framework import permissions
 
 from order.models import Order
 from order.serializers import (OrderSerializer,
-                               SimpleOrderSerializer)
+                               SimpleOrderSerializer,
+                               CheckOutOrderSerializer)
 
 
 class OrderListView(mixins.ListModelMixin,
@@ -24,10 +25,10 @@ class OrderListView(mixins.ListModelMixin,
         return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
 
 
-class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
-                                    mixins.UpdateModelMixin,
-                                    mixins.DestroyModelMixin,
-                                    generics.GenericAPIView):
+class OrderRetrieveCheckOutDeleteView(mixins.RetrieveModelMixin,
+                                      mixins.UpdateModelMixin,
+                                      mixins.DestroyModelMixin,
+                                      generics.GenericAPIView):
     """
     Pass.
     """
@@ -46,10 +47,13 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
         """
         return self.partial_update(request, *args, **kwargs)
 
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
     def get_serializer_class(self):
-        method = self.serializer_class
+        method = self.request.method
         if method == "PATCH":
-            return
+            return CheckOutOrderSerializer
         return self.serializer_class
 
     def get_queryset(self):

@@ -1,7 +1,10 @@
-from django.http import HttpResponse
 from django.urls import path
+
+from order.views import (OrderListView,
+                         OrderRetrieveCheckOutDeleteView)
 
 
 urlpatterns = [
-    path('check/', lambda request: HttpResponse('OK')),
+    path('<int:pk>/', OrderListView.as_view()),
+    path('<int:pk>/<int:id>/', OrderRetrieveCheckOutDeleteView.as_view()),
 ]

@@ -17,6 +17,9 @@ services:
 
   db:
     image: postgres
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pharma-password
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data 

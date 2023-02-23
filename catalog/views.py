@@ -1,6 +1,5 @@
 from rest_framework import mixins
 from rest_framework import generics
-from rest_framework import permissions
 from rest_framework import filters
 
 from django_filters import rest_framework
@@ -10,8 +9,11 @@ from catalog.paginations import CatalogListPagination
 from catalog.services import ProductFilter
 from catalog.serializers import (SimpleProductSerializer,
                                  ProductSerializer)
+from catalog.permissions import (IsCustomerOrReadOnly,
+                                 IsStuffOrEmployee,
+                                 IsStuffOrEmployeeOrReadOnly)
 
-from cart.serializers import (AddPositionSerializer,)
+from cart.serializers import (AddPositionSerializer)
 
 
 class CatalogListView(mixins.CreateModelMixin,
@@ -28,7 +30,7 @@ class CatalogListView(mixins.CreateModelMixin,
     serializer_class = SimpleProductSerializer
     pagination_class = CatalogListPagination
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOrReadOnly,
     )
 
     # Filter parameters for 'django_filters.rest_framework'.
@@ -82,7 +84,7 @@ class CatalogRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
     serializer_class = ProductSerializer
     lookup_field = "slug"
     permission_classes = (
-        permissions.AllowAny,
+        IsStuffOrEmployeeOrReadOnly
     )
 
     def get(self, request, *args, **kwargs):
@@ -107,7 +109,7 @@ class CatalogCreateItemView(mixins.CreateModelMixin,
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsStuffOrEmployee,
     )
 
     def post(self, request, *args, **kwargs):

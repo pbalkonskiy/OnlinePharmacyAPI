@@ -1,11 +1,12 @@
 from rest_framework import generics
 from rest_framework import mixins
-from rest_framework import permissions
 
 from order.models import Order
 from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
                                CheckOutOrderSerializer)
+
+from cart.permissions import IsCustomerOwner
 
 
 class OrderListView(mixins.ListModelMixin,
@@ -15,7 +16,7 @@ class OrderListView(mixins.ListModelMixin,
     """
     serializer_class = SimpleOrderSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
 
     def get(self, request, *args, **kwargs):
@@ -34,7 +35,7 @@ class OrderRetrieveCheckOutDeleteView(mixins.RetrieveModelMixin,
     """
     serializer_class = OrderSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
     lookup_field = "id"
 

@@ -1,9 +1,9 @@
 from rest_framework import mixins
 from rest_framework import generics
-from rest_framework import permissions
 from rest_framework import response
 
 from cart.models import Cart, Position
+from cart.permissions import IsCustomerOwner
 from cart.serializers import (CartSerializer,
                               PositionSerializer,
                               UpdatePositionSerializer)
@@ -27,7 +27,7 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
 
     def get(self, request, *args, **kwargs):
@@ -81,7 +81,7 @@ class CartListUpdatePositionsView(mixins.ListModelMixin,
     """
     serializer_class = PositionSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
 
     def get(self, request, *args, **kwargs):
@@ -119,7 +119,7 @@ class CartDeletePositionsView(mixins.RetrieveModelMixin,
     queryset = Position.objects.all()
     serializer_class = PositionSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
     lookup_field = "product__slug"
 

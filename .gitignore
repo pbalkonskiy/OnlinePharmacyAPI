@@ -19,6 +19,9 @@ media
 .idea/**/dictionaries
 .idea/**/shelf
 
+# postgres
+pgdata
+
 # migrations
 **/migrations/**
 !**/migrations

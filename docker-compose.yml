@@ -1,5 +1,6 @@
 services:
-  web:
+
+  server:
     build: .
     command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     container_name: pharmacy
@@ -14,6 +15,27 @@ services:
       DB_NAME: mydb
       DB_USER: postgres
       DB_PASSWORD: pharma-password
+
+  worker:
+    restart: unless-stopped
+    build: .
+    environment:
+      DEBUG: "True"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      DB_HOST: db
+      DB_NAME: mydb
+      DB_USER: postgres
+      DB_PASSWORD: pharma-password
+    depends_on:
+      - server
+      - redis
+
+  redis:
+    restart: unless-stopped
+    image: redis:7.0.5-alpine
+    expose:
+      - 6379
 
   db:
     image: postgres

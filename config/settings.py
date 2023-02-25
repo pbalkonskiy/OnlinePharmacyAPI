@@ -15,6 +15,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 
+from celery.schedules import crontab
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(find_dotenv())
@@ -53,6 +56,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'rest_framework_simplejwt',
+    'django_celery_beat',
 ]
 
 REST_FRAMEWORK = {
@@ -188,5 +192,14 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery & Redis
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+
+# Celery beat
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULE = {
+    'delete_expired_objects': {
+        "task": "check_positions",
+        "schedule": crontab(minute="*/3"),
+    },
+}

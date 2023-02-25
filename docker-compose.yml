@@ -1,47 +1,55 @@
+version: "3.9"
+
 services:
 
   server:
-    build: .
+    build:
+      context: .
     command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    container_name: pharmacy
-    volumes:
-      - .:/pharmacy
+    container_name: server
     ports:
       - "8000:8000"
     depends_on:
       - db
     environment:
-      DB_HOST: db
-      DB_NAME: mydb
-      DB_USER: postgres
-      DB_PASSWORD: pharma-password
+      - DB_HOST=db
+      - DB_NAME=mydb
+      - DB_USER=postgres
+      - DB_PASSWORD=pharma-password
+    volumes:
+      - .:/app
+    restart: always
 
   worker:
-    restart: unless-stopped
-    build: .
+    build:
+      context: .
+    command: celery -A config worker -l info -B
     environment:
-      DEBUG: "True"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
-      DB_HOST: db
-      DB_NAME: mydb
-      DB_USER: postgres
-      DB_PASSWORD: pharma-password
+      - DEBUG=True
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DB_HOST=db
+      - DB_NAME=mydb
+      - DB_USER=postgres
+      - DB_PASSWORD=pharma-password
     depends_on:
-      - server
+      - db
       - redis
+    restart: always
 
   redis:
-    restart: unless-stopped
-    image: redis:7.0.5-alpine
-    expose:
-      - 6379
+    image: redis
+    restart: always
 
   db:
     image: postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: pharma-password
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pharma-password
+      - POSTGRES_DB=mydb
     volumes:
-      - ./pgdata:/var/lib/postgresql/data 
+      - db:/var/lib/postgresql/data
+
+volumes:
+  db:

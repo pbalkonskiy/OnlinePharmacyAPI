@@ -17,7 +17,10 @@ class Order(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     delivery_method = models.CharField(choices=DELIVERY_METHODS, max_length=15, null=True, blank=True)
     payment_method = models.CharField(choices=PAYMENT_METHODS, max_length=20, null=True, blank=True)
-    payment_status = models.CharField(choices=PAYMENT_STATUS, max_length=20, null=True, blank=True)
+    payment_status = models.CharField(default="Pending payment", choices=PAYMENT_STATUS,
+                                      max_length=20, null=True, blank=True, editable=False)
+    is_paid = models.BooleanField(default=False, editable=False)
+    in_progress = models.BooleanField(default=False, editable=False)
     address = models.TextField(null=True, blank=True)
     post_index = models.IntegerField(null=True, blank=True)
 

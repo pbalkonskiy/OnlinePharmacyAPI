@@ -2,11 +2,11 @@ FROM python:3.10
 
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir /pharmacy
+RUN mkdir /app
 
-WORKDIR /pharmacy
+WORKDIR /app
 
-ADD . /pharmacy/
+ADD . /app/
 
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install

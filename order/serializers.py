@@ -18,10 +18,10 @@ class SimpleOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ["id", "url", "key", "customer_id", "numb_of_positions",
-                  "total_price", "date", "payment_status"]
+                  "total_price", "date", "payment_status", "is_paid", "in_progress"]
 
 
-class AddSimpleOrderSerializer(serializers.ModelSerializer):
+class AddOrderSerializer(serializers.ModelSerializer):
     """
     Special serializer for cart application to create a new order based on the cart
     positions list reviewed using POST method.
@@ -45,7 +45,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ["id", "key", "customer_id", "positions", "numb_of_positions",
                   "total_price", "date", "delivery_method", "payment_method",
-                  "payment_status", "address", "post_index"]
+                  "payment_status", "is_paid", "address", "post_index"]
         lookup_field = "id"
         extra_kwargs = {
             "url": {
@@ -58,12 +58,15 @@ class CheckOutOrderSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
 
     def save(self, **kwargs):
+        instance = super().save(**kwargs)
+        order_id = instance.id
+
         delivery_method = self.validated_data["delivery_method"]
         payment_method = self.validated_data["payment_method"]
         address = self.validated_data["address"]
         post_index = self.validated_data["post_index"]
 
-        order_item = Order.objects.get(id=self.id)
+        order_item = Order.objects.get(id=order_id)
         order_item.delivery_method = delivery_method
         order_item.payment_method = payment_method
         order_item.payment_status = "Pending payment"

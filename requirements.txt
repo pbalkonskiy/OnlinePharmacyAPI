@@ -8,6 +8,7 @@ coreschema==0.0.4
 cryptography==39.0.1
 defusedxml==0.7.1
 Django==4.1.7
+django-celery-beat==2.4.0
 django-filter==22.1
 django-templated-mail==1.1.1
 djangorestframework==3.14.0

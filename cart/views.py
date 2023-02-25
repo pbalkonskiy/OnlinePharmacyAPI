@@ -9,7 +9,7 @@ from cart.serializers import (CartSerializer,
                               UpdatePositionSerializer)
 
 from order.models import Order
-from order.serializers import AddSimpleOrderSerializer
+from order.serializers import AddOrderSerializer
 
 
 class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
@@ -48,7 +48,7 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
         """
         order = Order.objects.create(customer=request.user.customer)
         order.save()
-        serializer = AddSimpleOrderSerializer(order)
+        serializer = AddOrderSerializer(order)
         return response.Response(serializer.data)
 
     def delete(self, request, *args, **kwargs):
@@ -69,7 +69,7 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
         method = self.request.method
         if method == "GET" or method == "DELETE":
             return self.serializer_class
-        return AddSimpleOrderSerializer
+        return AddOrderSerializer
 
 
 class CartListUpdatePositionsView(mixins.ListModelMixin,

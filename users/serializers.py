@@ -81,6 +81,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
         UserData = validated_data.pop('user')
         NewCommonUser = CommonUser(**UserData)
         NewCommonUser.set_password(UserData['password'])
+        NewCommonUser.is_staff = True
         NewCommonUser.save()
         NewEmployee = Employee.objects.create(user=NewCommonUser, **validated_data)
         return NewEmployee

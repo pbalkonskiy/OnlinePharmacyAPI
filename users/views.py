@@ -1,8 +1,9 @@
 from rest_framework import generics, permissions, mixins
-from rest_framework.permissions import AllowAny
+from rest_framework import permissions
 from rest_framework.views import APIView
 
 from users.models import Customer, Employee
+from users.permissions import IsStaff, IsStaffOrOwner
 from users.serializers import CustomerSerializer, EmployeeSerializer
 
 
@@ -11,7 +12,7 @@ from users.serializers import CustomerSerializer, EmployeeSerializer
 class CustomerViewList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = permissions.AllowAny,  # need to be AdminUser
+    permission_classes = [IsStaff]  # need to be AdminUser
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -20,9 +21,7 @@ class CustomerViewList(mixins.ListModelMixin, generics.GenericAPIView):
 class CustomerCreateView(mixins.RetrieveModelMixin, generics.CreateAPIView):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = (
-        permissions.AllowAny,
-    )
+    permission_classes = [permissions.AllowAny]
 
 
 class CustomerRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
@@ -32,16 +31,11 @@ class CustomerRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
     queryset = Customer.objects.all()
     lookup_field = 'slug'
     serializer_class = CustomerSerializer
-    permission_classes = (
-        permissions.AllowAny,
-        # permissions.IsAdminUser
-    )
+    permission_classes = [IsStaffOrOwner]
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
@@ -50,22 +44,23 @@ class CustomerRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
         return self.destroy(request, *args, **kwargs)
 
 
-
-
 class EmployeeViewList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-    permission_classes = (AllowAny,)  # need to be AdminUser
+    permission_classes = [
+        IsStaff
+    ]
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
 
-
 class EmployeeCreateView(mixins.RetrieveModelMixin, generics.CreateAPIView):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = [
+        permissions.IsAdminUser
+    ]
 
 
 class EmployeeRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
@@ -74,7 +69,7 @@ class EmployeeRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
                                        generics.GenericAPIView):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-    permission_classes = (permissions.AllowAny,)  # need to be AdminUser and current_user
+    permission_classes = [IsStaffOrOwner]
     lookup_field = "slug"
 
     def get(self, request, *args, **kwargs):
@@ -88,7 +83,3 @@ class EmployeeRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
-
-
-class ClSAP(generics.GenericAPIView):
-    pass

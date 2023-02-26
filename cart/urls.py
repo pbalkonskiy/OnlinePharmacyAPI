@@ -7,6 +7,6 @@ from cart.views import (CartRetrieveDeleteAllPositionsView,
 
 urlpatterns = [
     path("<int:pk>/", CartRetrieveDeleteAllPositionsView.as_view()),
-    path("<int:pk>/items/", CartListUpdatePositionsView.as_view()),
-    path("<int:pk>/items/<slug:slug>/", CartDeletePositionsView.as_view()),
+    path("<int:pk>/edit/", CartListUpdatePositionsView.as_view()),
+    path("<int:pk>/<slug:product__slug>/", CartDeletePositionsView.as_view()),
 ]

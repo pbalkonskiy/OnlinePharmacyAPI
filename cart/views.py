@@ -1,25 +1,33 @@
 from rest_framework import mixins
 from rest_framework import generics
-from rest_framework import permissions
 from rest_framework import response
 
 from cart.models import Cart, Position
+from cart.permissions import IsCustomerOwner
 from cart.serializers import (CartSerializer,
                               PositionSerializer,
                               UpdatePositionSerializer)
 
+from order.models import Order
+from order.serializers import AddOrderSerializer
+
 
 class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
+                                         mixins.CreateModelMixin,
                                          mixins.DestroyModelMixin,
                                          generics.GenericAPIView):
     """
     View that retrieves user's cart based on 'CartSerializer', so it also
-    provides cart ID, total positions number and total price.
+    provides cart ID, total positions number and total price (GET).
+
+    Among other things, the view gives the ability to erase all items from the cart.
+
+    The key function of the view is to create a customer order based on the added product positions.
     """
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
 
     def get(self, request, *args, **kwargs):
@@ -27,6 +35,21 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
         Provides data from the specific cart object based on 'CartSerializer'.
         """
         return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Used to create new record in the 'Order' model filled with added cart positions.
+        """
+        return self.create(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Used to create new 'Order' exemplar based on customer ID.
+        """
+        order = Order.objects.create(customer=request.user.customer)
+        order.save()
+        serializer = AddOrderSerializer(order)
+        return response.Response(serializer.data)
 
     def delete(self, request, *args, **kwargs):
         """
@@ -42,6 +65,12 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
             position.delete()
         return response.Response(serializer.data)
 
+    def get_serializer_class(self):
+        method = self.request.method
+        if method == "GET" or method == "DELETE":
+            return self.serializer_class
+        return AddOrderSerializer
+
 
 class CartListUpdatePositionsView(mixins.ListModelMixin,
                                   mixins.UpdateModelMixin,
@@ -50,9 +79,9 @@ class CartListUpdatePositionsView(mixins.ListModelMixin,
     View allows to observe the cart positions list based on the 'PositionSerializer'
     and to update one specific position's parameters using PATCH request method.
     """
-    queryset = Cart.objects.all()
+    serializer_class = PositionSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
 
     def get(self, request, *args, **kwargs):
@@ -73,7 +102,7 @@ class CartListUpdatePositionsView(mixins.ListModelMixin,
     def get_serializer_class(self):
         if self.request.method == "PATCH":
             return UpdatePositionSerializer
-        return PositionSerializer
+        return self.serializer_class
 
     def get_serializer_context(self):
         return {
@@ -90,8 +119,9 @@ class CartDeletePositionsView(mixins.RetrieveModelMixin,
     queryset = Position.objects.all()
     serializer_class = PositionSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
+    lookup_field = "product__slug"
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

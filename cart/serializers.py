@@ -14,6 +14,7 @@ class PositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Position
         fields = ["id", "slug", "cart", "product", "price", "amount"]
+        lookup_field = "product__slug"
 
 
 class AddPositionSerializer(serializers.ModelSerializer):

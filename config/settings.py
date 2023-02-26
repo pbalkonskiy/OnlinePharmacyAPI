@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(find_dotenv())
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'rest_framework_simplejwt',
+    'django_celery_beat',
 ]
 
 REST_FRAMEWORK = {
@@ -130,8 +132,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'pharma-password',
+        'HOST': 'db',
+        'PORT': 5432,
     }
 }
 
@@ -183,3 +189,14 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Celery & Redis
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+CELERY_TIMEZONE = "Europe/Minsk"
+
+CELERY_BEAT_SCHEDULE = {
+    "check_positions": {
+        "task": "cart.tasks.check_positions",
+        "schedule": 600.0,
+    },
+}

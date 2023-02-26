@@ -3,7 +3,7 @@ from django.dispatch import receiver
 
 from users.models import Customer
 
-from cart.models import Cart, Position
+from cart.models import Cart
 
 from order.models import Order
 

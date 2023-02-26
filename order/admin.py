@@ -15,8 +15,11 @@ class OrderAdmin(admin.ModelAdmin):
         "delivery_method",
         "payment_method",
         "payment_status",
+        "is_paid",
+        "in_progress",
     )
     list_filter = (
+        "is_paid",
         "customer_id",
         "date",
         "payment_status",

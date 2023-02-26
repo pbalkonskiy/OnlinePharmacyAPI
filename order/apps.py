@@ -6,4 +6,4 @@ class OrderConfig(AppConfig):
     name = 'order'
 
     def ready(self):
-        import users.signals
+        import cart.signals

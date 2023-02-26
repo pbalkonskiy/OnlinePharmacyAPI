@@ -1,11 +1,16 @@
 from rest_framework import generics
+from rest_framework import status
 from rest_framework import mixins
-from rest_framework import permissions
+from rest_framework import response
 
 from order.models import Order
+from order.tasks import check_order_payment_status
 from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
-                               CheckOutOrderSerializer)
+                               CheckOutOrderSerializer,
+                               AddOrderSerializer)
+
+from cart.permissions import IsCustomerOwner
 
 
 class OrderListView(mixins.ListModelMixin,
@@ -15,7 +20,7 @@ class OrderListView(mixins.ListModelMixin,
     """
     serializer_class = SimpleOrderSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
 
     def get(self, request, *args, **kwargs):
@@ -26,6 +31,7 @@ class OrderListView(mixins.ListModelMixin,
 
 
 class OrderRetrieveCheckOutDeleteView(mixins.RetrieveModelMixin,
+                                      mixins.CreateModelMixin,
                                       mixins.UpdateModelMixin,
                                       mixins.DestroyModelMixin,
                                       generics.GenericAPIView):
@@ -34,17 +40,34 @@ class OrderRetrieveCheckOutDeleteView(mixins.RetrieveModelMixin,
     """
     serializer_class = OrderSerializer
     permission_classes = (
-        permissions.AllowAny,
+        IsCustomerOwner,
     )
     lookup_field = "id"
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
+    def post(self, request, *args, **kwargs):
+        """
+        Returns nothing, just changes 'in_progress' order field to True.
+        Contains 'check_order_payment_status' Celery task.
+        """
+        order = self.get_object()
+
+        if order.delivery_method and order.payment_method and order.payment_status:
+            order.in_progress = True
+            order.save()
+
+            serializer = self.get_serializer(order)
+            check_order_payment_status.delay(order.id)
+            return response.Response(serializer.data)
+
+        return response.Response(
+            {"Order unfulfilled": "Additional information required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     def patch(self, request, *args, **kwargs):
-        """
-        Method specially for user to pick suitable order parameters.
-        """
         return self.partial_update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
@@ -54,6 +77,8 @@ class OrderRetrieveCheckOutDeleteView(mixins.RetrieveModelMixin,
         method = self.request.method
         if method == "PATCH":
             return CheckOutOrderSerializer
+        if method == "POST":
+            return AddOrderSerializer
         return self.serializer_class
 
     def get_queryset(self):

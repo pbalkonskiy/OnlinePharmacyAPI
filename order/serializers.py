@@ -18,7 +18,8 @@ class SimpleOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ["id", "url", "key", "customer_id", "numb_of_positions",
-                  "total_price", "date", "payment_status", "is_paid", "in_progress"]
+                  "total_price", "created_at", "payment_status", "payment_intent",
+                  "is_paid", "in_progress", "closed"]
 
 
 class AddOrderSerializer(serializers.ModelSerializer):
@@ -44,8 +45,8 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ["id", "key", "customer_id", "positions", "numb_of_positions",
-                  "total_price", "date", "delivery_method", "payment_method",
-                  "payment_status", "is_paid", "address", "post_index"]
+                  "total_price", "created_at", "delivery_method", "payment_method",
+                  "payment_status", "payment_intent", "is_paid", "address", "post_index"]
         lookup_field = "id"
         extra_kwargs = {
             "url": {
@@ -55,8 +56,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class CheckOutOrderSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-
     def save(self, **kwargs):
         instance = super().save(**kwargs)
         order_id = instance.id
@@ -97,4 +96,4 @@ class CheckOutOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ["id", "delivery_method", "payment_method", "address", "post_index"]
+        fields = ["delivery_method", "payment_method", "address", "post_index"]

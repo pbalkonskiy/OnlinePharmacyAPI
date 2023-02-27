@@ -84,7 +84,7 @@ class CatalogRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
     serializer_class = ProductSerializer
     lookup_field = "slug"
     permission_classes = (
-        IsStuffOrEmployeeOrReadOnly
+        IsStuffOrEmployeeOrReadOnly,
     )
 
     def get(self, request, *args, **kwargs):

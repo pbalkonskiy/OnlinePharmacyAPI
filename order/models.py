@@ -14,13 +14,15 @@ from users.models import Customer
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="orders")
     positions = models.ManyToManyField(Position, related_name="order", blank=True)
-    date = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     delivery_method = models.CharField(choices=DELIVERY_METHODS, max_length=15, null=True, blank=True)
     payment_method = models.CharField(choices=PAYMENT_METHODS, max_length=20, null=True, blank=True)
     payment_status = models.CharField(default="Pending payment", choices=PAYMENT_STATUS,
                                       max_length=20, null=True, blank=True, editable=False)
+    payment_intent = models.CharField(max_length=50, null=True, blank=True, editable=False)
     is_paid = models.BooleanField(default=False, editable=False)
     in_progress = models.BooleanField(default=False, editable=False)
+    closed = models.BooleanField(default=False, editable=False)
     address = models.TextField(null=True, blank=True)
     post_index = models.IntegerField(null=True, blank=True)
 
@@ -37,14 +39,14 @@ class Order(models.Model):
 
     @property
     def key(self) -> str:
-        return f"{(hash(self.date))}"[1::5]
+        return f"{(hash(self.created_at))}"[1::5]
 
     @property
     def url(self) -> str:
         return "http://127.0.0.1:8000/orders/{}/{}/".format(self.customer.id, self.id)
 
     class Meta:
-        ordering = ["date"]
+        ordering = ["created_at"]
 
     def __str__(self) -> str:
         return f"{self.id} order"

@@ -11,17 +11,19 @@ class OrderAdmin(admin.ModelAdmin):
         "customer_id",
         "numb_of_positions",
         "total_price",
-        "date",
+        "created_at",
         "delivery_method",
         "payment_method",
         "payment_status",
         "is_paid",
         "in_progress",
+        "closed",
     )
     list_filter = (
         "is_paid",
+        "closed",
         "customer_id",
-        "date",
+        "created_at",
         "payment_status",
         "delivery_method",
     )

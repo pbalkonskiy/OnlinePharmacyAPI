@@ -6,7 +6,7 @@ from users.models import CommonUser, Customer, Employee
 # Register your models here.
 
 class CommonUserAdmin(admin.ModelAdmin):
-    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'patronymic', 'is_active', 'is_staff')
+    list_display = ('id', 'username', 'slug', 'email', 'first_name', 'last_name', 'patronymic', 'is_active', 'is_staff')
     search_fields = ('username', 'first_name', 'last_name')
     list_editable = ('is_active', 'is_staff', 'first_name', 'last_name')
     list_filter = ('username', 'first_name',)

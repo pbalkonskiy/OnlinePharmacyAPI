@@ -33,7 +33,6 @@ class CommonUser(AbstractUser):
 class Customer(models.Model):
     user = models.OneToOneField(CommonUser, related_name="customer", on_delete=models.CASCADE, null=True)
 
-
     slug = models.SlugField(max_length=150, unique=True, null=True, blank=True, editable=False)
 
     telephone_number = models.CharField(max_length=20)

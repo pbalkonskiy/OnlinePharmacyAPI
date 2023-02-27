@@ -3,17 +3,20 @@ from rest_framework import generics
 from rest_framework import filters
 
 from django_filters import rest_framework
+from rest_framework.exceptions import NotFound
+from rest_framework.response import Response
 
-from catalog.models import Product
+from catalog.models import Product, Raiting
 from catalog.paginations import CatalogListPagination
 from catalog.services import ProductFilter
 from catalog.serializers import (SimpleProductSerializer,
-                                 ProductSerializer)
+                                 ProductSerializer, RaitingSerializer)
 from catalog.permissions import (IsCustomerOrReadOnly,
                                  IsStuffOrEmployee,
                                  IsStuffOrEmployeeOrReadOnly)
 
 from cart.serializers import (AddPositionSerializer)
+from users.models import CommonUser
 
 
 class CatalogListView(mixins.CreateModelMixin,
@@ -84,7 +87,7 @@ class CatalogRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
     serializer_class = ProductSerializer
     lookup_field = "slug"
     permission_classes = (
-        IsStuffOrEmployeeOrReadOnly
+        IsStuffOrEmployeeOrReadOnly,
     )
 
     def get(self, request, *args, **kwargs):
@@ -108,10 +111,42 @@ class CatalogCreateItemView(mixins.CreateModelMixin,
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (
-        IsStuffOrEmployee,
-    )
+
+    # permission_classes = (
+    #     IsStuffOrEmployee,
+    # )
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
+
+class RaitingListUpdateView(mixins.RetrieveModelMixin,
+                            mixins.DestroyModelMixin,
+                            mixins.UpdateModelMixin,
+                            generics.GenericAPIView):
+    queryset = Raiting.objects.all()
+    permission_classes = (IsCustomerOrReadOnly,)
+    serializer_class = RaitingSerializer
+    lookup_field = "slug"
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        my_model: Raiting = self.get_object()
+        user: CommonUser = request.user
+        try:
+            my_model.raiting_set.pop(user.slug)
+            my_model.save()
+        except:
+            raise NotFound("Object does not exist")
+        else:
+            return Response("Successfully deleted ")
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        obj = generics.get_object_or_404(queryset, slug=self.kwargs["slug"])
+        return obj

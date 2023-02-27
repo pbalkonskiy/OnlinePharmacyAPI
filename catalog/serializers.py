@@ -1,6 +1,8 @@
+from typing import Dict
+
 from rest_framework import serializers
 
-from catalog.models import Product, Category, Manufacturer
+from catalog.models import Product, Category, Manufacturer, Raiting
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
@@ -28,6 +30,7 @@ class SimpleCategorySerializer(serializers.ModelSerializer):
     """
     Simplified version of category serializer.
     """
+
     class Meta:
         model = Category
         fields = ["title"]
@@ -107,3 +110,27 @@ class SimpleProductSerializer(serializers.ModelSerializer):
         fields = ["id", "url", "title", "category", "brand", "price", "is_in_stock"]
         # added 'is_in_stock' field in case the product in the cart position
         # is completely sold out to prevent it from getting into the order.
+
+
+class RaitingSerializer(serializers.ModelSerializer):
+    new_value = serializers.IntegerField(write_only=True)
+    average_raiting = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = Raiting
+        fields = ['average_raiting', 'new_value']
+        read_only_fields = ['average_raiting']
+        lookup_field = "slug"
+
+    def update(self, instance, validated_data):
+        request = self.context.get("request", None)
+        user = request.user if request else None
+        raiting_list: Dict[str:int] = instance.raiting_set
+        raiting_list[str(user.slug)] = validated_data['new_value']
+
+        instance.raiting_set = raiting_list
+        instance.save()
+
+        return instance
+
+

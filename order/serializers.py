@@ -18,7 +18,7 @@ class SimpleOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ["id", "url", "key", "customer_id", "numb_of_positions",
-                  "total_price", "created_at", "payment_status", "payment_intent",
+                  "total_price", "created_at", "payment_status", "payment_id",
                   "is_paid", "in_progress", "closed"]
 
 
@@ -46,7 +46,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ["id", "key", "customer_id", "positions", "numb_of_positions",
                   "total_price", "created_at", "delivery_method", "payment_method",
-                  "payment_status", "payment_intent", "is_paid", "address", "post_index"]
+                  "payment_status", "payment_id", "is_paid", "address", "post_index"]
         lookup_field = "id"
         extra_kwargs = {
             "url": {

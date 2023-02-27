@@ -5,9 +5,11 @@ from rest_framework import response
 
 from django.urls import reverse
 from django.shortcuts import redirect
+from django.forms import model_to_dict
 
 from order.models import Order
 from order.tasks import check_order_payment_status
+from order.stripe import create_stripe_order
 from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
                                CheckOutOrderSerializer,
@@ -19,8 +21,10 @@ from cart.permissions import IsCustomerOwner
 class OrderActiveListView(mixins.ListModelMixin,
                           generics.GenericAPIView):
     """
-    Lists all
+    Lists all customer's orders.
+    Will be updated soon.
     """
+
     serializer_class = SimpleOrderSerializer
     permission_classes = (
         IsCustomerOwner,
@@ -39,8 +43,13 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
                                     mixins.DestroyModelMixin,
                                     generics.GenericAPIView):
     """
-    Pass.
+    Retrieves one specific order. Allows to update editable parameters based on
+    'CheckOutOrderSerializer' and delete the order.
+
+    POST method turns 'in_progress' filed to True. Used to confirm the inputted order
+    parameters and move to the payment system.
     """
+
     serializer_class = OrderSerializer
     permission_classes = (
         IsCustomerOwner,
@@ -55,6 +64,7 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
         Method for order unit confirmation. Redirects user to the checkout URL ('OrderCheckOutView').
         Changes 'in_progress' order field to True. Contains 'check_order_payment_status' Celery task.
         """
+
         order = self.get_object()
         if not order.is_paid:
 
@@ -112,8 +122,10 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
                         mixins.CreateModelMixin,
                         generics.GenericAPIView):
     """
-    View
+    View used to confirm edited order and dash to the payment or to use DELETE method
+    for cancellation and coming back to the previous step on the 'OrderRetrieveUpdateDeleteView'.
     """
+
     serializer_class = OrderSerializer
     permission_classes = (
         IsCustomerOwner,
@@ -127,6 +139,9 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
         order = self.get_object()
 
         if order.in_progress and not order.is_paid:
+            data = model_to_dict(order, fields=["id", "customer"])
+            order.payment_id = create_stripe_order(data, order.total_price)
+
             pk = self.kwargs.get("pk")
             order_id = self.kwargs.get("id")
             redirect_url = reverse("payment_url", kwargs={"pk": pk, "id": order_id})

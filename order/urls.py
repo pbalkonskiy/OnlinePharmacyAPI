@@ -7,7 +7,7 @@ from order.views import (OrderActiveListView,
 
 
 urlpatterns = [
-    path('<int:pk>/', OrderActiveListView.as_view()),
+    path('<int:pk>/', OrderActiveListView.as_view(), name="orders_active_url"),
     path('<int:pk>/<int:id>/', OrderRetrieveUpdateDeleteView.as_view(), name="order_retrieve_url"),
     path('<int:pk>/<int:id>/checkout/', OrderCheckOutView.as_view(), name="checkout_url"),
     path('<int:pk>/<int:id>/payment/', OrderPaymentView.as_view(), name="payment_url"),

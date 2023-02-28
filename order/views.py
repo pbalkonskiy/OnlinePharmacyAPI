@@ -1,11 +1,16 @@
+import os
+import stripe
+
 from rest_framework import generics
 from rest_framework import status
 from rest_framework import mixins
 from rest_framework import response
+from rest_framework import views
 
 from django.urls import reverse
 from django.shortcuts import redirect
 from django.forms import model_to_dict
+from django.views.decorators.csrf import csrf_exempt
 
 from order.models import Order
 from order.tasks import check_order_payment_status
@@ -16,6 +21,9 @@ from order.serializers import (OrderSerializer,
                                AddOrderSerializer)
 
 from cart.permissions import IsCustomerOwner
+
+stripe.api_key = os.environ["STRIPE_PRIVATE_KEY"]
+ORDERS_URL = "http://127.0.0.1:8000/orders"
 
 
 class OrderActiveListView(mixins.ListModelMixin,
@@ -143,10 +151,37 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
             order.stripe_payment_id, order.stripe_order_id = create_stripe_order(data, order.total_price)
             order.save()
 
-            pk = self.kwargs.get("pk")
-            order_id = self.kwargs.get("id")
-            redirect_url = reverse("payment_url", kwargs={"pk": pk, "id": order_id})
-            return redirect(redirect_url)
+            try:
+                checkout_session = stripe.checkout.Session.create(
+                    line_items=[
+                        {
+                            "price_data": {
+                                "currency": "byn",
+                                "unit_amount": int(order.total_price * 100),
+                                "product_data": {
+                                    "name": str(order.id)
+                                }
+                            },
+                            "quantity": 1,
+                        }
+                    ],
+                    metadata={
+                        "product_id": order.stripe_order_id,
+                    },
+                    mode="payment",
+                    success_url="{}/{}/".format(ORDERS_URL, self.kwargs["pk"]),
+                    cancel_url="{}/{}/".format(ORDERS_URL, self.kwargs["pk"])
+                )
+                order.is_paid = True
+                order.payment_status = "Successfully paid"
+                order.save()
+                return redirect(checkout_session.url, code=status.HTTP_201_CREATED)
+
+            except Exception as exception:
+                order.is_paid = False
+                order.payment_status = "Pending payment"
+                order.save()
+                return response.Response({"Session error": str(exception)}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         return response.Response(
             {"Payment already closed": "You have already paid for the order and have no need to repeat again."},
@@ -158,24 +193,6 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
         if method == "POST":
             return AddOrderSerializer
         return self.serializer_class
-
-    def get_queryset(self):
-        return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
-
-
-class OrderPaymentView(mixins.RetrieveModelMixin,
-                       generics.GenericAPIView):
-    """
-    Pass.
-    """
-    serializer_class = OrderSerializer
-    permission_classes = (
-        IsCustomerOwner,
-    )
-    lookup_field = "id"
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
         return Order.objects.filter(customer_id=self.kwargs["pk"]).all()

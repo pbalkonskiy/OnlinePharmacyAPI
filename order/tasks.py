@@ -6,11 +6,11 @@ from order.models import Order
 
 
 @app.task
-def delete_order(order_id):
+def deactivate_order(order_id):
     try:
         order = Order.objects.get(id=order_id)
         if not order.is_paid:
-            order.delete()
+            order.in_progress = False
     except Order.DoesNotExist:
         pass
 
@@ -20,6 +20,6 @@ def check_order_payment_status(order_id):
     try:
         order = Order.objects.get(id=order_id)
         if order.delivery_method and order.payment_method and order.payment_status and order.in_progress:
-            delete_order.apply_async(args=(order.id,), eta=(order.created_at + timedelta(minutes=5)))
+            deactivate_order.apply_async(args=(order.id,), eta=(order.created_at + timedelta(minutes=30)))
     except Order.DoesNotExist:
         pass

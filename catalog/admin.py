@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from catalog.models import Product, Category, Manufacturer
+from catalog.models import Product, Category, Manufacturer, Raiting
 
 
 @admin.register(Product)
@@ -23,6 +23,16 @@ class ProductAdmin(admin.ModelAdmin):
     )
     empty_value_display = "undefined"
 
+@admin.register(Raiting)
+class RaitingAdmin(admin.ModelAdmin):
+    list_display = (
+        "product",
+        "slug",
+        "raiting_set",
+        "average_raiting",
+
+    )
+
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -43,3 +53,4 @@ class ManufacturerAdmin(admin.ModelAdmin):
         "country",
     )
     empty_value_display = "undefined"
+

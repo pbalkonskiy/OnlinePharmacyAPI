@@ -9,7 +9,7 @@ orders_url = os.environ["STRIPE_PRODUCTS_URL"]
 prices_url = os.environ["STRIPE_PRICES_URL"]
 
 
-def create_stripe_order(data, price):
+def create_stripe_order(data, price, key, first_name, last_name):
     """
     Function initializes new order instance (as product) on the Stripe API side.
     """
@@ -21,9 +21,9 @@ def create_stripe_order(data, price):
 
     # Initializing order instance.
     order_data = {
-        "name": str(data.get("id")),
+        "name": f"{first_name} {last_name}. Order #{data.get('id')}",
         "type": "service",
-        "description": str(data.get("customer")),
+        "description": f"Order identifier: {key}",
     }
 
     response = requests.post(orders_url, headers=headers, data=order_data)

@@ -5,12 +5,10 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework import mixins
 from rest_framework import response
-from rest_framework import views
 
 from django.urls import reverse
 from django.shortcuts import redirect
 from django.forms import model_to_dict
-from django.views.decorators.csrf import csrf_exempt
 
 from order.models import Order
 from order.tasks import check_order_payment_status
@@ -147,8 +145,10 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
         order = self.get_object()
 
         if order.in_progress and not order.is_paid:
-            data = model_to_dict(order, fields=["id", "customer"])
-            order.stripe_payment_id, order.stripe_order_id = create_stripe_order(data, order.total_price)
+            data = model_to_dict(order)
+            order.stripe_payment_id, order.stripe_order_id = create_stripe_order(data, order.total_price, order.key,
+                                                                                 order.customer.user.first_name,
+                                                                                 order.customer.user.last_name)
             order.save()
 
             try:

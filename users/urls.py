@@ -1,5 +1,3 @@
-from django.db import router
-from django.http import HttpResponse
 from django.urls import path, include, re_path
 
 from users.views import CustomerViewList, CustomerRetrieveUpdateDeleteView, CustomerCreateView, EmployeeViewList, \

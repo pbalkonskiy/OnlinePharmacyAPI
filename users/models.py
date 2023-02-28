@@ -21,7 +21,7 @@ class CommonUser(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
-    def __str__(self)->str:
+    def __str__(self) -> str:
         return f"{self.slug}"
 
     def save(self, *args, **kwargs):
@@ -42,7 +42,7 @@ class Customer(models.Model):
         verbose_name = "customer"
         verbose_name_plural = "customers"
 
-    def __str__(self)->str:
+    def __str__(self) -> str:
         return f"{self.slug}"
 
     def save(self, *args, **kwargs):
@@ -53,7 +53,6 @@ class Customer(models.Model):
 class Employee(models.Model):
     user = models.OneToOneField(CommonUser, on_delete=models.CASCADE)
 
-
     slug = models.SlugField(max_length=150, unique=True, null=True, blank=True, editable=False)
 
     education = models.TextField(blank=True, null=True)
@@ -63,7 +62,7 @@ class Employee(models.Model):
         verbose_name_plural = "employees"
         verbose_name = "employee"
 
-    def __str__(self)->str:
+    def __str__(self) -> str:
         return f"{self.slug}"
 
     def save(self, *args, **kwargs):

@@ -6,13 +6,12 @@ from django_filters import rest_framework
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
-from catalog.models import Product, Raiting
+from catalog.models import Product, Rating
 from catalog.paginations import CatalogListPagination
 from catalog.services import ProductFilter
 from catalog.serializers import (SimpleProductSerializer,
-                                 ProductSerializer, RaitingSerializer)
+                                 ProductSerializer, RatingSerializer)
 from catalog.permissions import (IsCustomerOrReadOnly,
-                                 IsStuffOrEmployee,
                                  IsStuffOrEmployeeOrReadOnly)
 
 from cart.serializers import (AddPositionSerializer)
@@ -120,13 +119,13 @@ class CatalogCreateItemView(mixins.CreateModelMixin,
         return self.create(request, *args, **kwargs)
 
 
-class RaitingListUpdateView(mixins.RetrieveModelMixin,
-                            mixins.DestroyModelMixin,
-                            mixins.UpdateModelMixin,
-                            generics.GenericAPIView):
-    queryset = Raiting.objects.all()
+class RatingListUpdateView(mixins.RetrieveModelMixin,
+                           mixins.DestroyModelMixin,
+                           mixins.UpdateModelMixin,
+                           generics.GenericAPIView):
+    queryset = Rating.objects.all()
     permission_classes = (IsCustomerOrReadOnly,)
-    serializer_class = RaitingSerializer
+    serializer_class = RatingSerializer
     lookup_field = "slug"
 
     def patch(self, request, *args, **kwargs):
@@ -136,12 +135,12 @@ class RaitingListUpdateView(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        my_model: Raiting = self.get_object()
+        my_model: Rating = self.get_object()
         user: CommonUser = request.user
         try:
-            my_model.raiting_set.pop(user.slug)
+            my_model.rating_set.pop(user.slug)
             my_model.save()
-        except:
+        except KeyError:
             raise NotFound("Object does not exist")
         else:
             return Response("Successfully deleted ")

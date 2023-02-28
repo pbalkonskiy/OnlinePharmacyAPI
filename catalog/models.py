@@ -1,4 +1,3 @@
-import statistics
 from django.db import models
 from django.template.defaultfilters import slugify
 
@@ -48,8 +47,6 @@ class Product(models.Model):
         self.slug = slugify(self.title)
         return super().save(*args, **kwargs)
 
-
-
     def __str__(self):
         return self.title
 
@@ -96,13 +93,12 @@ class Category(models.Model):
         return self.title
 
 
-class Raiting(models.Model):
-    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name='raiting')
-    raiting_set = models.JSONField(default=dict, blank=True)
+class Rating(models.Model):
+    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name='rating')
+    rating_set = models.JSONField(default=dict, blank=True)
     slug = models.SlugField(max_length=100, null=True, blank=True, editable=False)
 
     @property
-    def average_raiting(self):
-        raitings = [raiting for raiting in self.raiting_set.values()]
-        return sum(raitings) / len(raitings) if len(raitings) > 0 else float(0)
-
+    def average_rating(self):
+        ratings = [rating for rating in self.rating_set.values()]
+        return sum(ratings) / len(ratings) if len(ratings) > 0 else float(0)

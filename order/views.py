@@ -140,7 +140,8 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
 
         if order.in_progress and not order.is_paid:
             data = model_to_dict(order, fields=["id", "customer"])
-            order.payment_id = create_stripe_order(data, order.total_price)
+            order.stripe_payment_id, order.stripe_order_id = create_stripe_order(data, order.total_price)
+            order.save()
 
             pk = self.kwargs.get("pk")
             order_id = self.kwargs.get("id")

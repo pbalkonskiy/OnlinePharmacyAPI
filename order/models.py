@@ -19,7 +19,8 @@ class Order(models.Model):
     payment_method = models.CharField(choices=PAYMENT_METHODS, max_length=20, null=True, blank=True)
     payment_status = models.CharField(default="Pending payment", choices=PAYMENT_STATUS,
                                       max_length=20, null=True, blank=True, editable=False)
-    payment_id = models.CharField(max_length=50, null=True, blank=True, editable=False)
+    stripe_order_id = models.CharField(max_length=50, null=True, blank=True, editable=False)
+    stripe_payment_id = models.CharField(max_length=50, null=True, blank=True, editable=False)
     is_paid = models.BooleanField(default=False, editable=False)
     in_progress = models.BooleanField(default=False, editable=False)
     closed = models.BooleanField(default=False, editable=False)

@@ -47,9 +47,25 @@ def create_stripe_order(data, price):
     else:
         raise Exception(response.text)
 
-    response = requests.get(f'{orders_url}/{order_id}', headers=headers)
+    response = requests.get(f"{orders_url}/{order_id}", headers=headers)
     if response.status_code == 200:
         print(f"STRIPE : Order '{data.get('id')}' successfully added.")
-        return price_id
+        return price_id, order_id
+    else:
+        raise Exception(response.text)
+
+
+def delete_stripe_product(order_id):
+    """
+    Deletes order instance (as product) on the Stripe API side.
+    """
+
+    product_data = {
+        "active": False,
+    }
+
+    response = requests.post(f"{orders_url}/{order_id}", auth=(stripe.api_key, ""), data=product_data)
+    if response.status_code == 200:
+        print(f"Order {order_id} successfully deactivated.")
     else:
         raise Exception(response.text)

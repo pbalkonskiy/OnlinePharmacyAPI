@@ -15,6 +15,8 @@ class OrderAdmin(admin.ModelAdmin):
         "delivery_method",
         "payment_method",
         "payment_status",
+        "stripe_order_id",
+        "stripe_payment_id",
         "is_paid",
         "in_progress",
         "closed",

@@ -142,7 +142,7 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
             return redirect(reverse("order_retrieve_url", args=[order.customer.id, order.id]))
 
         return response.Response(
-            {"Order already ready": "Can't not edit order's parameters"},
+            {"Order already ready": "Can not edit order's parameters"},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
 
@@ -240,7 +240,7 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
                 return response.Response({"Session error": str(exception)}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         return response.Response(
-            {"Payment already closed": "You have already paid for the order and have no need to repeat again."},
+            {"Payment already closed": "You have already paid for the order and have no need to repeat again"},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
 
@@ -275,12 +275,11 @@ class OrderBookingSetupView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        order = self.get_object()
+        order_id = self.kwargs.get("id")
+        customer_id = self.kwargs.get("pk")
+        order = Order.objects.get(id=order_id, customer_id=customer_id)
 
         if not order.is_paid or not order.in_progress:
-
-            order_id = self.kwargs.get("id")
-            customer_id = self.kwargs.get("pk")
 
             redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
             return redirect(redirect_url)
@@ -291,12 +290,11 @@ class OrderBookingSetupView(mixins.ListModelMixin,
         )
 
     def patch(self, request, *args, **kwargs):
-        order = self.get_object()
+        order_id = self.kwargs.get("id")
+        customer_id = self.kwargs.get("pk")
+        order = Order.objects.get(id=order_id, customer_id=customer_id)
 
         if not order.is_paid or not order.in_progress:
-
-            order_id = self.kwargs.get("id")
-            customer_id = self.kwargs.get("pk")
 
             serializer = self.get_serializer(order, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)

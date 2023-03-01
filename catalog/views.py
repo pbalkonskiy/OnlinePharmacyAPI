@@ -127,7 +127,9 @@ class RatingListUpdateView(mixins.RetrieveModelMixin,
                            mixins.UpdateModelMixin,
                            generics.GenericAPIView):
     queryset = Rating.objects.all()
-    permission_classes = (IsCustomerOrReadOnly,)
+    permission_classes = (
+        IsCustomerOrReadOnly,
+    )
     serializer_class = RatingSerializer
     lookup_field = "slug"
 

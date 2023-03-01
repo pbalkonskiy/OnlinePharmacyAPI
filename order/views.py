@@ -7,7 +7,7 @@ from rest_framework import mixins
 from rest_framework import response
 from rest_framework import filters
 
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.shortcuts import redirect
 from django.forms import model_to_dict
 
@@ -133,17 +133,18 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
     def patch(self, request, *args, **kwargs):
         order = self.get_object()
 
-        if order.in_progress or order.is_paid:
-            return response.Response(
-                {"Order already ready": "Can't edit order's parameters"},
-                status=status.HTTP_405_METHOD_NOT_ALLOWED
-            )
+        if not order.in_progress or not order.is_paid:
 
-        serializer = self.get_serializer(order, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+            serializer = self.get_serializer(order, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
 
-        return redirect(reverse("order_retrieve_url", args=[order.customer.id, order.id]))
+            return redirect(reverse("order_retrieve_url", args=[order.customer.id, order.id]))
+
+        return response.Response(
+            {"Order already ready": "Can't not edit order's parameters"},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
@@ -225,6 +226,7 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
                     order.is_paid = True
                     order.payment_status = "Successfully paid"
                     order.save()
+
                     return redirect(checkout_session.url, code=status.HTTP_201_CREATED)
 
                 else:
@@ -273,29 +275,40 @@ class OrderBookingSetupView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        order_id = self.kwargs.get("id")
-        customer_id = self.kwargs.get("pk")
+        order = self.get_object()
 
-        redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
-        return redirect(redirect_url)
+        if not order.is_paid or not order.in_progress:
+
+            order_id = self.kwargs.get("id")
+            customer_id = self.kwargs.get("pk")
+
+            redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
+            return redirect(redirect_url)
+
+        return response.Response(
+            {"Order already collected": "You can't use this method to the current order"},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def patch(self, request, *args, **kwargs):
-        order_id = self.kwargs.get("id")
-        customer_id = self.kwargs.get("pk")
-        order = Order.objects.get(id=order_id, customer_id=customer_id)
+        order = self.get_object()
 
-        if order.in_progress:
-            return response.Response(
-                {"Order already ready": "Can't edit order's parameters"},
-                status=status.HTTP_405_METHOD_NOT_ALLOWED
-            )
+        if not order.is_paid or not order.in_progress:
 
-        serializer = self.get_serializer(order, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+            order_id = self.kwargs.get("id")
+            customer_id = self.kwargs.get("pk")
 
-        redirect_url = reverse("booking_ulr", args=[customer_id, order_id])
-        return redirect(redirect_url)
+            serializer = self.get_serializer(order, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+
+            redirect_url = reverse("booking_ulr", args=[customer_id, order_id])
+            return redirect(redirect_url)
+
+        return response.Response(
+            {"Order already ready": "Can't edit order's parameters"},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def get_serializer_class(self):
         method = self.request.method
@@ -331,12 +344,19 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
     def post(self, request, *args, **kwargs):
         order = self.get_object()
 
-        order.in_progress = True
-        order.save()
+        if not order.in_progress:
 
-        pk = self.kwargs.get("pk")
-        redirect_url = reverse("orders_active_url", kwargs={"pk": pk})
-        return redirect(redirect_url)
+            order.in_progress = True
+            order.save()
+
+            pk = self.kwargs.get("pk")
+            redirect_url = reverse("orders_active_url", kwargs={"pk": pk})
+            return redirect(redirect_url)
+
+        return response.Response(
+            {"Order already collected": "You can't use this method to the current order"},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(self, request, *args, **kwargs)

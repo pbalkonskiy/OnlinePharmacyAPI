@@ -50,7 +50,8 @@ def update_cart_on_order_delete(sender, instance, **kwargs):
     Deactivates order instance on the Stripe side.
     Positions from the order are transported to the customer's cart.
     """
-    delete_stripe_product(instance.stripe_order_id)
+    if instance.stripe_order_id:
+        delete_stripe_product(instance.stripe_order_id)
 
     cart = Cart.objects.get(id=instance.customer.id)
     for position in instance.positions.all():

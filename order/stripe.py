@@ -5,8 +5,10 @@ import stripe
 
 
 stripe.api_key = os.environ["STRIPE_PRIVATE_KEY"]
+
 orders_url = os.environ["STRIPE_PRODUCTS_URL"]
 prices_url = os.environ["STRIPE_PRICES_URL"]
+session_url = os.environ["STRIPE_SESSION_URL"]
 
 
 def create_stripe_order(data, price, key, first_name, last_name):
@@ -66,6 +68,25 @@ def delete_stripe_product(order_id):
 
     response = requests.post(f"{orders_url}/{order_id}", auth=(stripe.api_key, ""), data=product_data)
     if response.status_code == 200:
-        print(f"Order {order_id} successfully deactivated.")
+        print(f"STRIPE: Order {order_id} successfully deactivated.")
+    else:
+        raise Exception(response.text)
+
+
+def confirm_payment_by_session(session_id):
+    """
+    Confirms that current Stripe session payment was closed to manage order
+    statuses appropriately.
+    """
+
+    headers = {
+        "Authorization": f"Bearer {stripe.api_key}",
+    }
+
+    current_session_url = f"{session_url}/{session_id}"
+    response = requests.get(current_session_url, headers=headers)
+    if response.status_code == 200:
+        print(f"STRIPE: Got session {session_id} log successfully.")
+        return True
     else:
         raise Exception(response.text)

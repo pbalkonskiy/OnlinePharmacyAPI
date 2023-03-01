@@ -56,6 +56,10 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class CheckOutOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ["delivery_method", "payment_method", "address", "post_index"]
+
     def save(self, **kwargs):
         instance = super().save(**kwargs)
         order_id = instance.id
@@ -68,32 +72,42 @@ class CheckOutOrderSerializer(serializers.ModelSerializer):
         order_item = Order.objects.get(id=order_id)
         order_item.delivery_method = delivery_method
         order_item.payment_method = payment_method
-        order_item.payment_status = "Pending payment"
         order_item.address = address
         order_item.post_index = post_index
+
+        if order_item.delivery_method == "Door delivery" and order_item.payment_method == "Prepayment":
+            order_item.payment_status = "Pending payment"
+        else:
+            order_item.payment_status = "Payment upon receipt"
+
         order_item.save()
         self.instance = order_item
 
         return self.instance
 
-    def validate_id(self, value):
+    def validate(self, attrs):
         """
-        If the order with passed ID exists.
+        Validates order parameters compatability and post index value.
         """
-        try:
-            assert Order.objects.get(id=value)
-        except Order.DoesNotExist:
-            raise serializers.ValidationError("Order with such ID does not exist.")
-        return value
+        delivery_method = attrs.get("delivery_method")
+        payment_method = attrs.get("payment_method")
+        address = attrs.get("address")
+        index = attrs.get("post_index")
 
-    def validate_amount(self, value):
-        """
-        If passed 'post_index' number not longer than 6 symbols.
-        """
-        if len(str(value)) > 6:
+        if delivery_method and payment_method:
+            if delivery_method == "Door delivery" and payment_method == "Prepayment":
+                pass
+            elif delivery_method == "Self-delivery" and payment_method == "Upon receipt":
+                if address or index:
+                    raise serializers.ValidationError(
+                        "You don't need to enter the address or post index if you use self-delivery."
+                    )
+            else:
+                raise serializers.ValidationError(
+                    "Sorry, you can't use this payment method with the delivery method here."
+                )
+
+        if index and len(str(index)) > 6:
             raise serializers.ValidationError("Post index should not be longer than 6 symbols.")
-        return value
 
-    class Meta:
-        model = Order
-        fields = ["delivery_method", "payment_method", "address", "post_index"]
+        return attrs

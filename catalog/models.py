@@ -1,8 +1,10 @@
+from datetime import datetime
+
 from django.db import models
 from django.template.defaultfilters import slugify
 
 from catalog.managers import ProductInStockManager
-from catalog.constants import CATEGORIES
+from catalog.constants import CATEGORIES, PHARMACIES
 
 
 class Product(models.Model):
@@ -47,7 +49,7 @@ class Product(models.Model):
         self.slug = slugify(self.title)
         return super().save(*args, **kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
 
@@ -60,14 +62,14 @@ class Manufacturer(models.Model):
         verbose_name = 'manufacturer'
         verbose_name_plural = 'manufacturers'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 class Category(models.Model):
     title = models.CharField(choices=CATEGORIES, max_length=30)
     slug = models.SlugField(max_length=100, unique=True, editable=False, primary_key=True)
-    parent_category = models.ForeignKey('self', on_delete=models.CASCADE,
+    parent_category = models.ForeignKey("self", on_delete=models.CASCADE,
                                         null=True, blank=True, related_name="subcategories")
 
     @property
@@ -78,7 +80,7 @@ class Category(models.Model):
         return True if self.parent_category else False
 
     @property
-    def parent_title(self):
+    def parent_title(self) -> str:
         return self.parent_category.title if self.parent_category else None
 
     class Meta:
@@ -89,7 +91,7 @@ class Category(models.Model):
         self.slug = slugify(self.title)
         return super().save(*args, **kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
 
@@ -99,6 +101,29 @@ class Rating(models.Model):
     slug = models.SlugField(max_length=100, null=True, blank=True, editable=False)
 
     @property
-    def average_rating(self):
+    def average_rating(self) -> float:
         ratings = [rating for rating in self.rating_set.values()]
         return sum(ratings) / len(ratings) if len(ratings) > 0 else float(0)
+
+
+class Pharmacy(models.Model):
+    address = models.CharField(choices=PHARMACIES, max_length=30, unique=True)
+    products = models.ManyToManyField("Product")
+    opened_at = models.TimeField()
+    closed_at = models.TimeField()
+    number = models.CharField(max_length=15, unique=True)
+
+    class Meta:
+        verbose_name = "pharmacy"
+        verbose_name_plural = "pharmacies"
+
+    def __str__(self) -> str:
+        return self.address
+
+    @property
+    def is_opened(self) -> bool:
+        time_now = datetime.now().time()
+        print(time_now)
+        if self.opened_at <= time_now <= self.closed_at:
+            return True
+        return False

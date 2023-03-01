@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from catalog.models import Product, Category, Manufacturer, Rating
+from catalog.models import Product, Category, Manufacturer, Rating, Pharmacy
 
 
 @admin.register(Product)
@@ -23,8 +23,9 @@ class ProductAdmin(admin.ModelAdmin):
     )
     empty_value_display = "undefined"
 
+
 @admin.register(Rating)
-class RaitingAdmin(admin.ModelAdmin):
+class RatingAdmin(admin.ModelAdmin):
     list_display = (
         "product",
         "slug",
@@ -54,3 +55,13 @@ class ManufacturerAdmin(admin.ModelAdmin):
     )
     empty_value_display = "undefined"
 
+
+@admin.register(Pharmacy)
+class PharmacyAdmin(admin.ModelAdmin):
+    list_display = (
+        "address",
+        "number",
+        "opened_at",
+        "closed_at",
+        "is_opened",
+    )

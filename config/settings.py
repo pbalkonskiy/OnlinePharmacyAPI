@@ -200,3 +200,7 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 600.0,
     },
 }
+
+# Stripe payment system
+STRIPE_PUBLIC_KEY = os.environ['STRIPE_PUBLIC_KEY']
+STRIPE_PRIVATE_KEY = os.environ['STRIPE_PRIVATE_KEY']

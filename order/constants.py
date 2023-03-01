@@ -8,7 +8,7 @@ DELIVERY_METHODS = [
     (DOOR_DELIVERY, "Door delivery"),
 ]
 
-# Payments methods
+# Payment methods
 PREPAYMENT = "Prepayment"
 UPON_RECEIPT = "Upon receipt"
 

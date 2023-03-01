@@ -1,20 +1,23 @@
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import filters
-
-from django_filters import rest_framework
+from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
+from django_filters import rest_framework
+
+from django.http.response import Http404
+
 from catalog.models import Product, Rating
 from catalog.paginations import CatalogListPagination
-from catalog.services import ProductFilter
+from catalog.filters import ProductFilter
 from catalog.serializers import (SimpleProductSerializer,
                                  ProductSerializer, RatingSerializer)
 from catalog.permissions import (IsCustomerOrReadOnly,
                                  IsStuffOrEmployeeOrReadOnly)
 
-from cart.serializers import (AddPositionSerializer)
+from cart.serializers import AddPositionSerializer
 from users.models import CommonUser
 
 
@@ -132,7 +135,21 @@ class RatingListUpdateView(mixins.RetrieveModelMixin,
         return self.partial_update(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        try:
+            response = self.retrieve(request, *args, **kwargs)
+        except Http404:
+            data = {"Rating": "This product has no rating score yet"}
+            response = Response(data=data, status=status.HTTP_404_NOT_FOUND)
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        except Http404:
+            data = {"Rating": "This product has no rating score yet"}
+            return Response(data=data, status=status.HTTP_404_NOT_FOUND)
 
     def delete(self, request, *args, **kwargs):
         my_model: Rating = self.get_object()

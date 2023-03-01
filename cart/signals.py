@@ -6,6 +6,7 @@ from users.models import Customer
 from cart.models import Cart
 
 from order.models import Order
+from order.stripe import delete_stripe_product
 
 
 @receiver(signals.post_save, sender=Customer)
@@ -45,6 +46,13 @@ def delete_cart_positions(sender, instance, created, **kwargs):
 
 @receiver(signals.pre_delete, sender=Order)
 def update_cart_on_order_delete(sender, instance, **kwargs):
+    """
+    Deactivates order instance on the Stripe side.
+    Positions from the order are transported to the customer's cart.
+    """
+    if instance.stripe_order_id:
+        delete_stripe_product(instance.stripe_order_id)
+
     cart = Cart.objects.get(id=instance.customer.id)
     for position in instance.positions.all():
         position.cart = cart

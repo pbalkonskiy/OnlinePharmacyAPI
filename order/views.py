@@ -7,17 +7,21 @@ from rest_framework import mixins
 from rest_framework import response
 from rest_framework import filters
 
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.shortcuts import redirect
 from django.forms import model_to_dict
+
+from catalog.models import Pharmacy
+from catalog.serializers import PharmacySerializer
 
 from order.models import Order
 from order.tasks import check_order_payment_status
 from order.stripe import create_stripe_order, confirm_payment_by_session
 from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
-                               CheckOutOrderSerializer,
-                               AddOrderSerializer)
+                               OrderCheckOutSerializer,
+                               OrderAddSerializer,
+                               OrderBookingSerializer)
 
 from cart.permissions import IsCustomerOwner
 
@@ -95,14 +99,26 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
         if not order.is_paid:
 
             if order.delivery_method and order.payment_method and order.payment_status:
-                order.in_progress = True
-                order.save()
-                check_order_payment_status.delay(order.id)
 
-                pk = self.kwargs.get("pk")
-                order_id = self.kwargs.get("id")
-                redirect_url = reverse("checkout_url", kwargs={"pk": pk, "id": order_id})
-                return redirect(redirect_url)
+                # Distance one.
+                if order.delivery_method == "Door delivery" and order.payment_method == "Prepayment":
+
+                    order.in_progress = True
+                    order.save()
+                    check_order_payment_status.delay(order.id)
+
+                    pk = self.kwargs.get("pk")
+                    order_id = self.kwargs.get("id")
+                    redirect_url = reverse("checkout_url", kwargs={"pk": pk, "id": order_id})
+                    return redirect(redirect_url)
+
+                # Self-delivery.
+                elif order.delivery_method == "Self-delivery" and order.payment_method == "Upon receipt":
+
+                    pk = self.kwargs.get("pk")
+                    order_id = self.kwargs.get("id")
+                    redirect_url = reverse("booking_ulr", kwargs={"pk": pk, "id": order_id})
+                    return redirect(redirect_url)
 
             return response.Response(
                 {"Order unfulfilled": "Additional information required"},
@@ -135,9 +151,9 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
     def get_serializer_class(self):
         method = self.request.method
         if method == "PATCH":
-            return CheckOutOrderSerializer
+            return OrderCheckOutSerializer
         if method == "POST":
-            return AddOrderSerializer
+            return OrderAddSerializer
         return self.serializer_class
 
     def get_queryset(self):
@@ -146,10 +162,10 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
 
 class OrderCheckOutView(mixins.RetrieveModelMixin,
                         mixins.CreateModelMixin,
+                        mixins.DestroyModelMixin,
                         generics.GenericAPIView):
     """
-    View used to confirm edited order and dash to the payment or to use DELETE method
-    for cancellation and coming back to the previous step on the 'OrderRetrieveUpdateDeleteView'.
+    View used to confirm edited order and dash to the payment or to use DELETE method for order cancellation.
     """
 
     serializer_class = OrderSerializer
@@ -226,10 +242,109 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
 
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(self, request, *args, **kwargs)
+
     def get_serializer_class(self):
         method = self.request.method
         if method == "POST":
-            return AddOrderSerializer
+            return OrderAddSerializer
+        return self.serializer_class
+
+    def get_queryset(self):
+        return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
+
+
+class OrderBookingSetupView(mixins.ListModelMixin,
+                            mixins.CreateModelMixin,
+                            mixins.UpdateModelMixin,
+                            generics.GenericAPIView):
+    """
+    View used by customer to set up appropriate order parameters to continue ordering process.
+    """
+
+    serializer_class = OrderSerializer
+    permission_classes = (
+        IsCustomerOwner,
+    )
+    lookup_field = "id"
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        order_id = self.kwargs.get("id")
+        customer_id = self.kwargs.get("pk")
+
+        redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
+        return redirect(redirect_url)
+
+    def patch(self, request, *args, **kwargs):
+        order_id = self.kwargs.get("id")
+        customer_id = self.kwargs.get("pk")
+        order = Order.objects.get(id=order_id, customer_id=customer_id)
+
+        if order.in_progress:
+            return response.Response(
+                {"Order already ready": "Can't edit order's parameters"},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
+
+        serializer = self.get_serializer(order, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        redirect_url = reverse("booking_ulr", args=[customer_id, order_id])
+        return redirect(redirect_url)
+
+    def get_serializer_class(self):
+        method = self.request.method
+        if method == "GET":
+            return PharmacySerializer
+        if method == "PATCH":
+            return OrderBookingSerializer
+        if method == "POST":
+            return OrderAddSerializer
+
+    def get_queryset(self):
+        order_id = self.kwargs.get("id")
+        return Pharmacy.objects.filter(products__position__order__id=order_id).distinct()
+
+
+class OrderBookingConfirmView(mixins.RetrieveModelMixin,
+                              mixins.CreateModelMixin,
+                              mixins.DestroyModelMixin,
+                              generics.GenericAPIView):
+    """
+    View for order booking confirmation or order deletion.
+    """
+
+    serializer_class = OrderSerializer
+    permission_classes = (
+        IsCustomerOwner,
+    )
+    lookup_field = "id"
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(self, request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        order = self.get_object()
+
+        order.in_progress = True
+        order.save()
+
+        pk = self.kwargs.get("pk")
+        redirect_url = reverse("orders_active_url", kwargs={"pk": pk})
+        return redirect(redirect_url)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(self, request, *args, **kwargs)
+
+    def get_serializer_class(self):
+        method = self.request.method
+        if method == "POST":
+            return OrderAddSerializer
         return self.serializer_class
 
     def get_queryset(self):

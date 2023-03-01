@@ -123,7 +123,6 @@ class Pharmacy(models.Model):
     @property
     def is_opened(self) -> bool:
         time_now = datetime.now().time()
-        print(time_now)
         if self.opened_at <= time_now <= self.closed_at:
             return True
         return False

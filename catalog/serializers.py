@@ -2,7 +2,7 @@ from typing import Dict
 
 from rest_framework import serializers
 
-from catalog.models import Product, Category, Manufacturer, Rating
+from catalog.models import Product, Category, Manufacturer, Rating, Pharmacy
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
@@ -132,3 +132,11 @@ class RatingSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+
+class PharmacySerializer(serializers.ModelSerializer):
+    is_opened = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Pharmacy
+        fields = ["id", "address", "number", "opened_at", "closed_at", "is_opened"]

@@ -15,7 +15,7 @@ from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
 
 from order.models import Order
-from order.tasks import check_order_payment_status
+from order.tasks import check_order_payment_status, deactivate_overdue_order
 from order.stripe import create_stripe_order, confirm_payment_by_session
 from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
@@ -43,7 +43,7 @@ class OrderActiveListView(mixins.ListModelMixin,
     filter_backends = (
         filters.OrderingFilter,
     )
-    ordering = ("in_progress",)
+    ordering = ("-created_at",)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -281,8 +281,15 @@ class OrderBookingSetupView(mixins.ListModelMixin,
 
         if not order.is_paid or not order.in_progress:
 
-            redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
-            return redirect(redirect_url)
+            if order.pharmacy and order.receipt_date and order.receipt_time:
+
+                redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
+                return redirect(redirect_url)
+
+            return response.Response(
+                {"Order parameters error": "Some order parameters are invalid or undefined."},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
 
         return response.Response(
             {"Order already collected": "You can't use this method to the current order"},
@@ -345,6 +352,7 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
         if not order.in_progress:
 
             order.in_progress = True
+            deactivate_overdue_order.apply_async(args=(order.id,), countdown=3600)
             order.save()
 
             pk = self.kwargs.get("pk")

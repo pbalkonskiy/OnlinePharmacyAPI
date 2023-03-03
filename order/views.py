@@ -281,8 +281,15 @@ class OrderBookingSetupView(mixins.ListModelMixin,
 
         if not order.is_paid or not order.in_progress:
 
-            redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
-            return redirect(redirect_url)
+            if order.pharmacy and order.receipt_date and order.receipt_time:
+
+                redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
+                return redirect(redirect_url)
+
+            return response.Response(
+                {"Order parameters error": "Some order parameters are invalid or undefined."},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
 
         return response.Response(
             {"Order already collected": "You can't use this method to the current order"},

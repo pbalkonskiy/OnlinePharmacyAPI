@@ -23,7 +23,8 @@ def deactivate_overdue_order(order_id):
         if not order.is_paid and not order.is_closed:
             eta_time = order.receipt_datetime() + timedelta(hours=1)
             if timezone.now() > eta_time:
-                order.delete()
+                order.in_progress = False
+                order.save()
     except Order.DoesNotExist:
         pass
 

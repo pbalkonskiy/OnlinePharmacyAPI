@@ -25,7 +25,6 @@ from order.serializers import (OrderSerializer,
 
 from cart.permissions import IsCustomerOwner
 
-
 stripe.api_key = os.environ["STRIPE_PRIVATE_KEY"]
 ORDERS_URL = "http://127.0.0.1:8000/orders"
 
@@ -134,7 +133,6 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
         order = self.get_object()
 
         if not order.in_progress or not order.is_paid:
-
             serializer = self.get_serializer(order, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
@@ -278,7 +276,6 @@ class OrderBookingSetupView(mixins.ListModelMixin,
         order = self.get_object()
 
         if not order.is_paid or not order.in_progress:
-
             order_id = self.kwargs.get("id")
             customer_id = self.kwargs.get("pk")
 
@@ -294,7 +291,6 @@ class OrderBookingSetupView(mixins.ListModelMixin,
         order = self.get_object()
 
         if not order.is_paid or not order.in_progress:
-
             order_id = self.kwargs.get("id")
             customer_id = self.kwargs.get("pk")
 
@@ -345,7 +341,6 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
         order = self.get_object()
 
         if not order.in_progress:
-
             order.in_progress = True
             order.save()
 
@@ -369,3 +364,10 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
+
+
+class DeliveryConfirmView(mixins.RetrieveModelMixin, generics.GenericAPIView):
+    """
+    view for delivery confirmation
+    """
+    lookup_field = "id"

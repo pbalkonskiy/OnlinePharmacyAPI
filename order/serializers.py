@@ -154,3 +154,11 @@ class OrderBookingSerializer(serializers.ModelSerializer):
             serializers.ValidationError("There is no pharmacy with such ID in the list.")
 
         return attrs
+
+
+class DeliveryConfirmSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Order
+        fields = ['delivery_method']
+

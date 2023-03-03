@@ -15,7 +15,7 @@ from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
 
 from order.models import Order
-from order.tasks import check_order_payment_status
+from order.tasks import check_order_payment_status, deactivate_overdue_order
 from order.stripe import create_stripe_order, confirm_payment_by_session
 from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
@@ -43,7 +43,7 @@ class OrderActiveListView(mixins.ListModelMixin,
     filter_backends = (
         filters.OrderingFilter,
     )
-    ordering = ("in_progress",)
+    ordering = ("-created_at",)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -352,6 +352,7 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
         if not order.in_progress:
 
             order.in_progress = True
+            deactivate_overdue_order.apply_async(args=(order.id,), countdown=3600)
             order.save()
 
             pk = self.kwargs.get("pk")

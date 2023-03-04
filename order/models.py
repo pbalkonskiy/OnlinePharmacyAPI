@@ -19,15 +19,19 @@ class Order(models.Model):
     payment_method = models.CharField(choices=PAYMENT_METHODS, max_length=20, null=True, blank=True)
     payment_status = models.CharField(default="Pending payment", choices=PAYMENT_STATUS,
                                       max_length=20, null=True, blank=True, editable=False)
+    delivery_status = models.CharField(max_length=50, choices=DELIVERY_STATUS, default=WITHOUT_ACTION, editable=False)
+
+
     pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name="orders", null=True, blank=True)
     receipt_date = models.DateField(null=True, blank=True)
     receipt_time = models.TimeField(null=True, blank=True)
     stripe_order_id = models.CharField(max_length=50, null=True, blank=True, editable=False)
     stripe_payment_id = models.CharField(max_length=50, null=True, blank=True, editable=False)
+
+
     is_paid = models.BooleanField(default=False, editable=False)
     in_progress = models.BooleanField(default=False, editable=False)
 
-    delivery_status = models.CharField(max_length=50, choices=DELIVERY_STATUS, default=WITHOUT_ACTION, editable=False)
 
     closed = models.BooleanField(default=False, editable=False)
     address = models.TextField(null=True, blank=True)

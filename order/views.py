@@ -1,5 +1,6 @@
 import os
 import stripe
+from django.db.models import Q
 
 from rest_framework import generics
 from rest_framework import status
@@ -21,7 +22,7 @@ from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
                                OrderCheckOutSerializer,
                                OrderAddSerializer,
-                               OrderBookingSerializer)
+                               OrderBookingSerializer, DeliveryConfirmSerializer)
 
 from cart.permissions import IsCustomerOwner
 
@@ -222,6 +223,7 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
                     # issues.
 
                     order.is_paid = True
+                    order.delivery_status = "Packed in stock"
                     order.payment_status = "Successfully paid"
                     order.save()
 
@@ -366,8 +368,36 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
         return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
 
 
-class DeliveryConfirmView(mixins.RetrieveModelMixin, generics.GenericAPIView):
+class DeliveryListView(mixins.ListModelMixin,
+                       generics.GenericAPIView):
+    serializer_class = DeliveryConfirmSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        user_id = self.kwargs["pk"]
+        return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) and Q(closed=False)).all()
+
+
+class DeliveryConfirmView(mixins.RetrieveModelMixin,
+                          mixins.DestroyModelMixin,
+                          mixins.UpdateModelMixin,
+                          generics.GenericAPIView):
     """
     view for delivery confirmation
     """
+
     lookup_field = "id"
+    serializer_class = DeliveryConfirmSerializer
+
+    # queryset = Order.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) and Q(closed=False)).all()

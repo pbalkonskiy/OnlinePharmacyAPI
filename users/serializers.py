@@ -10,7 +10,9 @@ class CommonUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CommonUser
-        fields = ("email", "slug", "password", "first_name", "last_name", "patronymic",)
+        fields = ("email", "slug",  "first_name", "last_name", "patronymic", "password")
+        read_only_fields = ("password",)
+
 
         lookup_field = "slug"
         extra_kwargs = {
@@ -95,3 +97,10 @@ class EmployeeSerializer(serializers.ModelSerializer):
         if user_serializer.is_valid():
             user_serializer.update(instance.user, user_data)
         return super().update(instance, validated_data)
+
+class CustomerForManagerSerializer(serializers.ModelSerializer):
+    user = CommonUserSerializer()
+
+    class Meta:
+        model = Customer
+        fields = ('user', 'telephone_number')

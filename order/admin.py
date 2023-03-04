@@ -13,6 +13,7 @@ class OrderAdmin(admin.ModelAdmin):
         "total_price",
         "created_at",
         "delivery_method",
+        "delivery_status",
         "payment_method",
         "payment_status",
         "stripe_order_id",
@@ -20,6 +21,7 @@ class OrderAdmin(admin.ModelAdmin):
         "is_paid",
         "in_progress",
         "closed",
+
     )
     list_filter = (
         "is_paid",

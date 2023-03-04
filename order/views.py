@@ -394,7 +394,6 @@ class DeliveryManConfirmView(mixins.RetrieveModelMixin,
     serializer_class = DeliveryManConfirmSerializer
     permission_classes = (IsManager,)
 
-    # queryset = Order.objects.all()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

@@ -5,7 +5,7 @@ from order.views import (OrderActiveListView,
                          OrderRetrieveUpdateDeleteView,
                          OrderCheckOutView,
                          OrderBookingSetupView,
-                         OrderBookingConfirmView, DeliveryConfirmView, DeliveryListView)
+                         OrderBookingConfirmView, DeliveryManConfirmView, DeliveryManListView)
 
 
 urlpatterns = [
@@ -21,7 +21,7 @@ urlpatterns = [
     path("<int:pk>/<int:id>/booking/confirm/", OrderBookingConfirmView.as_view(), name="confirmation_url"),
 
     #Order management
-    path("<int:pk>/<int:id>/manage/", DeliveryConfirmView.as_view(), name="order_manage_url"),
-    path("<int:pk>/manage/", DeliveryListView.as_view(), name="list_of_customers_order"),
+    path("<int:pk>/<int:id>/manage/", DeliveryManConfirmView.as_view(), name="order_manage_url"),
+    path("<int:pk>/manage/", DeliveryManListView.as_view(), name="list_of_customers_order"),
 
 ]

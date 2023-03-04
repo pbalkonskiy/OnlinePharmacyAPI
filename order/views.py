@@ -22,7 +22,7 @@ from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
                                OrderCheckOutSerializer,
                                OrderAddSerializer,
-                               OrderBookingSerializer, DeliveryConfirmSerializer)
+                               OrderBookingSerializer, DeliveryManConfirmSerializer)
 
 from cart.permissions import IsCustomerOwner
 
@@ -368,9 +368,9 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
         return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
 
 
-class DeliveryListView(mixins.ListModelMixin,
+class DeliveryManListView(mixins.ListModelMixin,
                        generics.GenericAPIView):
-    serializer_class = DeliveryConfirmSerializer
+    serializer_class = DeliveryManConfirmSerializer
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -380,7 +380,7 @@ class DeliveryListView(mixins.ListModelMixin,
         return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) and Q(closed=False)).all()
 
 
-class DeliveryConfirmView(mixins.RetrieveModelMixin,
+class DeliveryManConfirmView(mixins.RetrieveModelMixin,
                           mixins.DestroyModelMixin,
                           mixins.UpdateModelMixin,
                           generics.GenericAPIView):
@@ -389,7 +389,7 @@ class DeliveryConfirmView(mixins.RetrieveModelMixin,
     """
 
     lookup_field = "id"
-    serializer_class = DeliveryConfirmSerializer
+    serializer_class = DeliveryManConfirmSerializer
 
     # queryset = Order.objects.all()
 

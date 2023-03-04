@@ -158,7 +158,7 @@ class OrderBookingSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class DeliveryConfirmSerializer(serializers.ModelSerializer):
+class DeliveryManConfirmSerializer(serializers.ModelSerializer):
     positions = PositionSerializer(read_only=True, many=True)
     customer = CustomerForManagerSerializer(read_only=True)
 

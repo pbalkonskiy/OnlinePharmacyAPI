@@ -16,6 +16,7 @@ from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
 
 from order.models import Order
+from order.permissions import IsManager
 from order.tasks import check_order_payment_status
 from order.stripe import create_stripe_order, confirm_payment_by_session
 from order.serializers import (OrderSerializer,
@@ -369,8 +370,9 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
 
 
 class DeliveryManListView(mixins.ListModelMixin,
-                       generics.GenericAPIView):
+                          generics.GenericAPIView):
     serializer_class = DeliveryManConfirmSerializer
+    permission_classes = (IsManager,)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -381,15 +383,16 @@ class DeliveryManListView(mixins.ListModelMixin,
 
 
 class DeliveryManConfirmView(mixins.RetrieveModelMixin,
-                          mixins.DestroyModelMixin,
-                          mixins.UpdateModelMixin,
-                          generics.GenericAPIView):
+                             mixins.DestroyModelMixin,
+                             mixins.UpdateModelMixin,
+                             generics.GenericAPIView):
     """
     view for delivery confirmation
     """
 
     lookup_field = "id"
     serializer_class = DeliveryManConfirmSerializer
+    permission_classes = (IsManager,)
 
     # queryset = Order.objects.all()
 

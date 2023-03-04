@@ -17,7 +17,7 @@ from catalog.serializers import PharmacySerializer
 
 from order.models import Order
 from order.permissions import IsManager
-from order.tasks import check_order_payment_status
+from order.tasks import check_order_payment_status, deactivate_overdue_order
 from order.stripe import create_stripe_order, confirm_payment_by_session
 from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
@@ -44,7 +44,7 @@ class OrderActiveListView(mixins.ListModelMixin,
     filter_backends = (
         filters.OrderingFilter,
     )
-    ordering = ("in_progress",)
+    ordering = ("-created_at",)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -142,7 +142,7 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
             return redirect(reverse("order_retrieve_url", args=[order.customer.id, order.id]))
 
         return response.Response(
-            {"Order already ready": "Can't not edit order's parameters"},
+            {"Order already ready": "Can not edit order's parameters"},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
 
@@ -241,7 +241,7 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
                 return response.Response({"Session error": str(exception)}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         return response.Response(
-            {"Payment already closed": "You have already paid for the order and have no need to repeat again."},
+            {"Payment already closed": "You have already paid for the order and have no need to repeat again"},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
 
@@ -276,14 +276,22 @@ class OrderBookingSetupView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        order = self.get_object()
+        order_id = self.kwargs.get("id")
+        customer_id = self.kwargs.get("pk")
+        order = Order.objects.get(id=order_id, customer_id=customer_id)
 
         if not order.is_paid or not order.in_progress:
             order_id = self.kwargs.get("id")
             customer_id = self.kwargs.get("pk")
 
-            redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
-            return redirect(redirect_url)
+            if order.pharmacy and order.receipt_date and order.receipt_time:
+                redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
+                return redirect(redirect_url)
+
+            return response.Response(
+                {"Order parameters error": "Some order parameters are invalid or undefined."},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
 
         return response.Response(
             {"Order already collected": "You can't use this method to the current order"},
@@ -291,7 +299,9 @@ class OrderBookingSetupView(mixins.ListModelMixin,
         )
 
     def patch(self, request, *args, **kwargs):
-        order = self.get_object()
+        order_id = self.kwargs.get("id")
+        customer_id = self.kwargs.get("pk")
+        order = Order.objects.get(id=order_id, customer_id=customer_id)
 
         if not order.is_paid or not order.in_progress:
             order_id = self.kwargs.get("id")
@@ -345,6 +355,7 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
 
         if not order.in_progress:
             order.in_progress = True
+            deactivate_overdue_order.apply_async(args=(order.id,), countdown=3600)
             order.save()
 
             pk = self.kwargs.get("pk")
@@ -372,7 +383,7 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
 class DeliveryManListView(mixins.ListModelMixin,
                           generics.GenericAPIView):
     serializer_class = DeliveryManConfirmSerializer
-    permission_classes = (IsManager,)
+    #permission_classes = (IsManager,)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -392,8 +403,7 @@ class DeliveryManConfirmView(mixins.RetrieveModelMixin,
 
     lookup_field = "id"
     serializer_class = DeliveryManConfirmSerializer
-    permission_classes = (IsManager,)
-
+    #permission_classes = (IsManager,)
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

@@ -1,13 +1,15 @@
+from datetime import datetime, timedelta
+
 from rest_framework import serializers
 
 from cart.serializers import PositionSerializer
 from order.constants import DELIVERY_METHODS
 
-from order.models import Order
-
 from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
 from users.serializers import CustomerForManagerSerializer
+
+from order.models import Order
 
 
 class SimpleOrderSerializer(serializers.ModelSerializer):
@@ -142,18 +144,33 @@ class OrderBookingSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """
-        Validates serializer fields and if the pickup time does not coincide with the
+        Validates serializer fields and checks if the pickup time does not coincide with the
         working hours of the pharmacy.
+
+        Also, there is a check whether the order date is overdue or the time parameter is invalid
+        (self-delivery order can be picked up not earlier than 2 hours after registration).
         """
+
+        instance = self.instance  # current order
         pharmacy = attrs.get("pharmacy")
         receipt_time = attrs.get("receipt_time")
+        receipt_date = attrs.get("receipt_date")
 
-        try:
+        if instance and receipt_date and receipt_time:
+
+            required = datetime.now() + timedelta(hours=2)
+            if datetime.combine(receipt_date, receipt_time) < required:
+                raise serializers.ValidationError("Invalid receipt date or time parameter.")
+
+        else:
+            raise serializers.ValidationError("Additional information (receipt date or time) required.")
+
+        if pharmacy:
             pharmacy = Pharmacy.objects.get(id=pharmacy.id)
             if not pharmacy.opened_at <= receipt_time <= pharmacy.closed_at:
-                serializers.ValidationError("Invalid self-delivery time.")
-        except Pharmacy.DoesNotExist:
-            serializers.ValidationError("There is no pharmacy with such ID in the list.")
+                raise serializers.ValidationError("Invalid self-delivery time.")
+        else:
+            raise serializers.ValidationError("Additional information (pharmacy) required.")
 
         return attrs
 

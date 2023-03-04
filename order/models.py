@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from django.db import models
@@ -36,6 +37,14 @@ class Order(models.Model):
     closed = models.BooleanField(default=False, editable=False)
     address = models.TextField(null=True, blank=True)
     post_index = models.IntegerField(null=True, blank=True)
+
+    def receipt_datetime(self) -> datetime:
+        """
+        Combines self-delivery order receipt date and time into one object.
+        """
+        return datetime.combine(
+            self.receipt_date, self.receipt_time
+        ) if self.receipt_date and self.receipt_time else None
 
     @property
     def numb_of_positions(self) -> int:

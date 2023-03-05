@@ -15,7 +15,7 @@ from catalog.filters import ProductFilter
 from catalog.serializers import (SimpleProductSerializer,
                                  ProductSerializer, RatingSerializer)
 from catalog.permissions import (IsCustomerOrReadOnly,
-                                 IsStuffOrEmployeeOrReadOnly)
+                                 IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee)
 
 from cart.serializers import AddPositionSerializer
 from users.models import CommonUser
@@ -114,9 +114,9 @@ class CatalogCreateItemView(mixins.CreateModelMixin,
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
-    # permission_classes = (
-    #     IsStuffOrEmployee,
-    # )
+    permission_classes = (
+        IsStuffOrEmployee,
+    )
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)

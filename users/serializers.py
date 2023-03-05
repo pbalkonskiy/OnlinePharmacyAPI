@@ -5,13 +5,13 @@ from users.models import CommonUser, Customer, Employee
 
 
 class CommonUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
     slug = serializers.SlugField(read_only=True)
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = CommonUser
         fields = ("email", "slug",  "first_name", "last_name", "patronymic", "password")
-        read_only_fields = ("password",)
+        read_only_fields = ("slug",)
 
 
         lookup_field = "slug"
@@ -25,6 +25,7 @@ class CommonUserSerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     user = CommonUserSerializer()
     slug = serializers.SlugField(read_only=True)
+    telephone_number = serializers.CharField()
 
     class Meta:
         model = Customer
@@ -36,6 +37,7 @@ class CustomerSerializer(serializers.ModelSerializer):
                 "lookup_field": "slug"
             }
         }
+        read_only_fields = ("slug",)
 
     def create(self, validated_data) -> (Customer, CommonUser):
         """

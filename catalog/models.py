@@ -103,7 +103,7 @@ class Rating(models.Model):
     @property
     def average_rating(self) -> float:
         ratings = [rating for rating in self.rating_set.values()]
-        return sum(ratings) / len(ratings) if len(ratings) > 0 else float(0)
+        return sum(ratings) / len(ratings) if len(ratings) > 0 else None
 
 
 class Pharmacy(models.Model):

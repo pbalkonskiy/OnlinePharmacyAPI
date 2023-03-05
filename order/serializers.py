@@ -193,7 +193,6 @@ class DeliveryManConfirmSerializer(serializers.ModelSerializer):
         lookup_field = "id"
 
     def update(self, instance: Order, validated_data):
-        print("check 1 ")
         if instance.is_paid and not instance.closed and instance.in_progress:
             print(validated_data.get("new_delivery_status"))
             instance.delivery_status = validated_data.get("new_delivery_status")
@@ -212,3 +211,24 @@ class DeliveryManConfirmSerializer(serializers.ModelSerializer):
             print(choices.values())
             raise serializers.ValidationError(f"{value} is not a valid choice for delivery status.")
         return value
+
+
+class ManagerSellerOrderSerializer(serializers.ModelSerializer):
+    positions = PositionSerializer(read_only=True, many=True)
+    customer = CustomerForManagerSerializer(read_only=True)
+    pharmacy = PharmacySerializer(read_only=True)
+    key = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = (
+            'id', 'key', 'delivery_method', "receipt_date", "receipt_time", "closed", 'pharmacy', 'customer',
+            'positions',)
+
+    def update(self, instance: Order, validated_data):
+        instance.in_progress = False
+        instance.closed = True
+        instance.is_paid = True
+        instance.save()
+        return instance
+

@@ -9,11 +9,11 @@ from django_filters import rest_framework
 
 from django.http.response import Http404
 
-from catalog.models import Product, Rating
+from catalog.models import Product, Rating, Comments
 from catalog.paginations import CatalogListPagination
 from catalog.filters import ProductFilter
 from catalog.serializers import (SimpleProductSerializer,
-                                 ProductSerializer, RatingSerializer)
+                                 ProductSerializer, RatingSerializer, CommentSerializer)
 from catalog.permissions import (IsCustomerOrReadOnly,
                                  IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee)
 
@@ -168,3 +168,28 @@ class RatingListUpdateView(mixins.RetrieveModelMixin,
         queryset = self.get_queryset()
         obj = generics.get_object_or_404(queryset, slug=self.kwargs["slug"])
         return obj
+
+
+class CustomCommentsView(generics.GenericAPIView,
+                         mixins.ListModelMixin,
+                         mixins.CreateModelMixin,
+                         mixins.UpdateModelMixin,
+                         mixins.DestroyModelMixin):
+    lookup_field = "slug"
+    serializer_class = CommentSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def get_queryset(self):
+        product_id = Product.objects.filter(slug=self.kwargs["slug"]).first()
+        return Comments.objects.filter(product=product_id, checked=True)
+
+
+    def get_serializer_context(self):
+        context = super(CustomCommentsView, self).get_serializer_context()
+        context['slug'] = self.kwargs["slug"]
+        return context

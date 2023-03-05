@@ -2,7 +2,8 @@ from typing import Dict
 
 from rest_framework import serializers
 
-from catalog.models import Product, Category, Manufacturer, Rating, Pharmacy
+from catalog.models import Product, Category, Manufacturer, Rating, Pharmacy, Comments
+from users.models import Customer
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
@@ -107,7 +108,7 @@ class SimpleProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "url", "title", "category", "brand", "price", "is_in_stock"]
+        fields = ["id", "url", "slug", "title", "category", "brand", "price", "is_in_stock"]
         # added 'is_in_stock' field in case the product in the cart position
         # is completely sold out to prevent it from getting into the order.
 
@@ -140,3 +141,34 @@ class PharmacySerializer(serializers.ModelSerializer):
     class Meta:
         model = Pharmacy
         fields = ["id", "address", "number", "opened_at", "closed_at", "is_opened"]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    product = serializers.SerializerMethodField('get_product_name', read_only=True)
+    commenters_name = serializers.CharField(read_only=True)
+    comment_field = serializers.CharField()
+
+    class Meta:
+        model = Comments
+        fields = ["id", "product", "commenters_name", "comment_field"]
+        lookup_field = "slug"
+
+    def get_product_name(self, obj: Comments):
+        title = obj.product.title
+        return title
+
+    def create(self, validated_data):
+        try:
+            current_product = Product.objects.get(slug=self.context.get('slug'))
+        except Product.DoesNotExist:
+            return serializers.ValidationError("Product does not exist")
+
+        try:
+            current_customer: Customer = self.context['request'].user.customer
+        except KeyError:
+            return serializers.ValidationError("User is not logged in")
+
+        result = Comments.objects.create(product=current_product, customer=current_customer,
+                                         comment_field=validated_data['comment_field'])
+
+        return result

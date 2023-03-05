@@ -29,5 +29,17 @@ PAYMENT_STATUS = [
 ]
 
 
+WITHOUT_ACTION = "Without action"
+PACKED_IN_STOCK = "Packed in stock"
+ON_THE_ROAD = "On the road"
+DELIVERED = "Delivered"
+
+DELIVERY_STATUS = [
+    (WITHOUT_ACTION, "Without action"),
+    (PACKED_IN_STOCK, "Packed in stock"),
+    (ON_THE_ROAD, "On the road"),
+    (DELIVERED, "Delivered"),
+]
+
 # Here will be delivery statuses.
 # Need to discuss it with BA team.

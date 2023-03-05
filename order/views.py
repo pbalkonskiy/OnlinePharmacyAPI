@@ -1,5 +1,6 @@
 import os
 import stripe
+from django.db.models import Q
 
 from rest_framework import generics
 from rest_framework import status
@@ -15,16 +16,16 @@ from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
 
 from order.models import Order
+from order.permissions import IsManager
 from order.tasks import check_order_payment_status, deactivate_overdue_order
 from order.stripe import create_stripe_order, confirm_payment_by_session
 from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
                                OrderCheckOutSerializer,
                                OrderAddSerializer,
-                               OrderBookingSerializer)
+                               OrderBookingSerializer, DeliveryManConfirmSerializer)
 
 from cart.permissions import IsCustomerOwner
-
 
 stripe.api_key = os.environ["STRIPE_PRIVATE_KEY"]
 ORDERS_URL = "http://127.0.0.1:8000/orders"
@@ -134,7 +135,6 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
         order = self.get_object()
 
         if not order.in_progress or not order.is_paid:
-
             serializer = self.get_serializer(order, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
@@ -224,6 +224,7 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
                     # issues.
 
                     order.is_paid = True
+                    order.delivery_status = "Packed in stock"
                     order.payment_status = "Successfully paid"
                     order.save()
 
@@ -280,9 +281,10 @@ class OrderBookingSetupView(mixins.ListModelMixin,
         order = Order.objects.get(id=order_id, customer_id=customer_id)
 
         if not order.is_paid or not order.in_progress:
+            order_id = self.kwargs.get("id")
+            customer_id = self.kwargs.get("pk")
 
             if order.pharmacy and order.receipt_date and order.receipt_time:
-
                 redirect_url = reverse("confirmation_url", args=[customer_id, order_id])
                 return redirect(redirect_url)
 
@@ -302,6 +304,8 @@ class OrderBookingSetupView(mixins.ListModelMixin,
         order = Order.objects.get(id=order_id, customer_id=customer_id)
 
         if not order.is_paid or not order.in_progress:
+            order_id = self.kwargs.get("id")
+            customer_id = self.kwargs.get("pk")
 
             serializer = self.get_serializer(order, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
@@ -350,7 +354,6 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
         order = self.get_object()
 
         if not order.in_progress:
-
             order.in_progress = True
             deactivate_overdue_order.apply_async(args=(order.id,), countdown=3600)
             order.save()
@@ -375,3 +378,38 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
+
+
+class DeliveryManListView(mixins.ListModelMixin,
+                          generics.GenericAPIView):
+    serializer_class = DeliveryManConfirmSerializer
+    #permission_classes = (IsManager,)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        user_id = self.kwargs["pk"]
+        return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) and Q(closed=False)).all()
+
+
+class DeliveryManConfirmView(mixins.RetrieveModelMixin,
+                             mixins.DestroyModelMixin,
+                             mixins.UpdateModelMixin,
+                             generics.GenericAPIView):
+    """
+    view for delivery confirmation
+    """
+
+    lookup_field = "id"
+    serializer_class = DeliveryManConfirmSerializer
+    #permission_classes = (IsManager,)
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) and Q(closed=False)).all()

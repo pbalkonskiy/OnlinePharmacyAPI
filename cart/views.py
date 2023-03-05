@@ -46,7 +46,9 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
         """
         Used to create new 'Order' exemplar based on customer ID.
         """
-        order = Order.objects.create(customer=request.user.customer)
+        if self.get_object().positions.count() == 0:
+            return response.Response({'Error': 'The cart is empty!'}, status=404)
+        order: Order = Order.objects.create(customer=request.user.customer)
         order.save()
         serializer = OrderAddSerializer(order)
         return response.Response(serializer.data)

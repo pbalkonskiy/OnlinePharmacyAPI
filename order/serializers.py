@@ -3,9 +3,11 @@ from datetime import datetime, timedelta
 from rest_framework import serializers
 
 from cart.serializers import PositionSerializer
+from order.constants import DELIVERY_METHODS
 
 from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
+from users.serializers import CustomerForManagerSerializer
 
 from order.models import Order
 
@@ -23,7 +25,7 @@ class SimpleOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ["id", "url", "key", "customer_id", "numb_of_positions",
-                  "total_price", "created_at", "delivery_method", "payment_status",
+                  "total_price", "created_at", "delivery_method", "delivery_status", "payment_status",
                   "is_paid", "in_progress", "closed"]
 
 
@@ -50,7 +52,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ["id", "key", "customer_id", "positions", "numb_of_positions",
-                  "total_price", "created_at", "delivery_method", "payment_method",
+                  "total_price", "created_at", "delivery_method", "delivery_status", "payment_method",
                   "payment_status", "is_paid", "address", "post_index", "pharmacy",
                   "receipt_date", "receipt_time"]
         lookup_field = "id"
@@ -171,3 +173,40 @@ class OrderBookingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Additional information (pharmacy) required.")
 
         return attrs
+
+
+class DeliveryManConfirmSerializer(serializers.ModelSerializer):
+    positions = PositionSerializer(read_only=True, many=True)
+    customer = CustomerForManagerSerializer(read_only=True)
+
+    new_delivery_status = serializers.CharField(write_only=True)
+    address = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['customer', 'positions', 'delivery_method', 'delivery_status', 'is_paid', 'in_progress', 'address',
+                  'post_index', 'new_delivery_status', 'closed']
+        read_only_fields = ['customer', 'positions', 'delivery_method', 'delivery_status',
+                            'is_paid', 'in_progress', 'address', 'post_index', ]
+
+        lookup_field = "id"
+
+    def update(self, instance: Order, validated_data):
+        print("check 1 ")
+        if instance.is_paid and not instance.closed and instance.in_progress:
+            print(validated_data.get("new_delivery_status"))
+            instance.delivery_status = validated_data.get("new_delivery_status")
+
+            if instance.delivery_status == 'Delivered':
+                instance.closed = True
+                instance.in_progress = False
+            instance.save()
+            return instance
+        else:
+            serializers.ValidationError('Something wrong with orders status')
+
+    def validate_new_delivery_status(self, value):
+        choices = dict(DELIVERY_METHODS)
+        if value not in choices:
+            raise serializers.ValidationError(f"{value} is not a valid choice for delivery status.")
+        return value

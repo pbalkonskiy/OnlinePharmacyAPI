@@ -58,9 +58,9 @@ class EmployeeViewList(mixins.ListModelMixin, generics.GenericAPIView):
 class EmployeeCreateView(mixins.RetrieveModelMixin, generics.CreateAPIView):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-    permission_classes = [
-        permissions.IsAdminUser
-    ]
+    # permission_classes = [
+    #     permissions.IsAdminUser
+    # ]
 
 
 class EmployeeRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,

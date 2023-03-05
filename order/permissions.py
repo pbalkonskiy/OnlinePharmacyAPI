@@ -1,14 +1,13 @@
 from rest_framework import permissions
 
 
-class IsManager(permissions.BasePermission):
+class IsDELIVERYManager(permissions.BasePermission):
     def has_permission(self, request, view):
         try:
-            #print("WTF HOW HOW HOW HOW HOW HOW HOW HOW HOW HOW HOW HOW HOW ")
-            is_manager = request.user.employee.position == "content manager"
+            is_delivery_manager = request.user.employee.position == "delivery manager"
 
-        except ValueError:
-            is_manager = False
-        if request.user.is_superuser or is_manager:
+        except AttributeError:
+            is_delivery_manager = False
+        if request.user.is_superuser or is_delivery_manager:
             return True
         return False

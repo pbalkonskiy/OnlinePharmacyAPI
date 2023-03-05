@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from rest_framework import serializers
 
 from cart.serializers import PositionSerializer
-from order.constants import DELIVERY_METHODS
+from order.constants import DELIVERY_STATUS
 
 from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
@@ -184,7 +184,8 @@ class DeliveryManConfirmSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['customer', 'positions', 'delivery_method', 'delivery_status', 'is_paid', 'in_progress', 'address',
+        fields = ['id', 'customer', 'positions', 'delivery_method', 'delivery_status', 'is_paid', 'in_progress',
+                  'address',
                   'post_index', 'new_delivery_status', 'closed']
         read_only_fields = ['customer', 'positions', 'delivery_method', 'delivery_status',
                             'is_paid', 'in_progress', 'address', 'post_index', ]
@@ -206,7 +207,8 @@ class DeliveryManConfirmSerializer(serializers.ModelSerializer):
             serializers.ValidationError('Something wrong with orders status')
 
     def validate_new_delivery_status(self, value):
-        choices = dict(DELIVERY_METHODS)
-        if value not in choices:
+        choices = dict(DELIVERY_STATUS)
+        if value not in choices.values():
+            print(choices.values())
             raise serializers.ValidationError(f"{value} is not a valid choice for delivery status.")
         return value

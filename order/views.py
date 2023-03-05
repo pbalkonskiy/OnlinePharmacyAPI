@@ -381,9 +381,12 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
         return Order.objects.filter(customer_id=self.kwargs["pk"])
 
 
-class DeliveryManListAllView(generics.ListAPIView):
+class DeliveryManListAllView(generics.GenericAPIView, mixins.ListModelMixin):
     serializer_class = DeliveryManConfirmSerializer
     permission_classes = (IsDELIVERYManager,)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
         return Order.objects.filter(closed=False)

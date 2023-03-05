@@ -31,8 +31,8 @@ class RatingAdmin(admin.ModelAdmin):
         "slug",
         "rating_set",
         "average_rating",
-
     )
+    empty_value_display = "None"
 
 
 @admin.register(Category)

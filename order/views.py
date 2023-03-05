@@ -1,6 +1,7 @@
 import os
 import stripe
 from django.db.models import Q
+from django_filters import rest_framework
 
 from rest_framework import generics
 from rest_framework import status
@@ -23,7 +24,7 @@ from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
                                OrderCheckOutSerializer,
                                OrderAddSerializer,
-                               OrderBookingSerializer, DeliveryManConfirmSerializer)
+                               OrderBookingSerializer, DeliveryManConfirmSerializer, ManagerSellerOrderSerializer)
 
 from cart.permissions import IsCustomerOwner
 
@@ -50,7 +51,7 @@ class OrderActiveListView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Order.objects.filter(customer_id=self.kwargs["pk"], closed=False).all()
+        return Order.objects.filter(customer_id=self.kwargs["pk"], closed=False)
 
 
 class OrderClosedListView(mixins.ListModelMixin,
@@ -67,7 +68,7 @@ class OrderClosedListView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Order.objects.filter(customer_id=self.kwargs["pk"], closed=True).all()
+        return Order.objects.filter(customer_id=self.kwargs["pk"], closed=True)
 
 
 class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
@@ -83,9 +84,9 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
     parameters and move to the payment system.
     """
     serializer_class = OrderSerializer
-    permission_classes = (
-        IsCustomerOwner,
-    )
+    # permission_classes = (
+    #     IsCustomerOwner,
+    # )
     lookup_field = "id"
 
     def get(self, request, *args, **kwargs):
@@ -158,7 +159,7 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
         return self.serializer_class
 
     def get_queryset(self):
-        return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
+        return Order.objects.filter(customer_id=self.kwargs["pk"])
 
 
 class OrderCheckOutView(mixins.RetrieveModelMixin,
@@ -255,7 +256,7 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
         return self.serializer_class
 
     def get_queryset(self):
-        return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
+        return Order.objects.filter(customer_id=self.kwargs["pk"])
 
 
 class OrderBookingSetupView(mixins.ListModelMixin,
@@ -267,9 +268,9 @@ class OrderBookingSetupView(mixins.ListModelMixin,
     """
 
     serializer_class = OrderSerializer
-    permission_classes = (
-        IsCustomerOwner,
-    )
+    # permission_classes = (
+    #     IsCustomerOwner,
+    # )
     lookup_field = "id"
 
     def get(self, request, *args, **kwargs):
@@ -341,10 +342,10 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
     View for order booking confirmation or order deletion.
     """
 
-    serializer_class = OrderSerializer
-    permission_classes = (
-        IsCustomerOwner,
-    )
+    # serializer_class = OrderSerializer
+    # permission_classes = (
+    #     IsCustomerOwner,
+    # )
     lookup_field = "id"
 
     def get(self, request, *args, **kwargs):
@@ -377,7 +378,7 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
         return self.serializer_class
 
     def get_queryset(self):
-        return Order.objects.filter(customer_id=self.kwargs["pk"]).all()
+        return Order.objects.filter(customer_id=self.kwargs["pk"])
 
 
 class DeliveryManListAllView(generics.ListAPIView):
@@ -385,7 +386,7 @@ class DeliveryManListAllView(generics.ListAPIView):
     permission_classes = (IsDELIVERYManager,)
 
     def get_queryset(self):
-        return Order.objects.filter(closed=False).all()
+        return Order.objects.filter(closed=False)
 
 
 class DeliveryManListView(mixins.ListModelMixin,
@@ -397,7 +398,7 @@ class DeliveryManListView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) and Q(closed=False)).all()
+        return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) & Q(closed=False))
 
 
 class DeliveryManConfirmView(mixins.RetrieveModelMixin,
@@ -419,4 +420,34 @@ class DeliveryManConfirmView(mixins.RetrieveModelMixin,
         return self.update(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) and Q(closed=False)).all()
+        return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) & Q(closed=False))
+
+
+class ManagerSellerAllOrdersView(generics.GenericAPIView, mixins.ListModelMixin, mixins.UpdateModelMixin):
+    serializer_class = ManagerSellerOrderSerializer
+    filter_backends = (
+        # rest_framework.DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    )
+    search_fields = ['key']
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Order.objects.filter(Q(pharmacy=self.kwargs["pk"]) & Q(closed=False))
+
+
+class ManagerSellerOrderView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
+    serializer_class = ManagerSellerOrderSerializer
+    lookup_field = "key"
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Order.objects.filter(Q(closed=False) & Q(pharmacy=self.kwargs["pk"]))

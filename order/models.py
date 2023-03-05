@@ -22,17 +22,15 @@ class Order(models.Model):
                                       max_length=20, null=True, blank=True, editable=False)
     delivery_status = models.CharField(max_length=50, choices=DELIVERY_STATUS, default=WITHOUT_ACTION, editable=False)
 
-
     pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name="orders", null=True, blank=True)
     receipt_date = models.DateField(null=True, blank=True)
     receipt_time = models.TimeField(null=True, blank=True)
     stripe_order_id = models.CharField(max_length=50, null=True, blank=True, editable=False)
     stripe_payment_id = models.CharField(max_length=50, null=True, blank=True, editable=False)
-
+    key = models.CharField(max_length=50, null=True, blank=True)
 
     is_paid = models.BooleanField(default=False, editable=False)
     in_progress = models.BooleanField(default=False, editable=False)
-
 
     closed = models.BooleanField(default=False, editable=False)
     address = models.TextField(null=True, blank=True)
@@ -58,10 +56,6 @@ class Order(models.Model):
         return sum([i * j for i, j in zip(amounts, prices)])
 
     @property
-    def key(self) -> str:
-        return f"{(hash(self.created_at))}"[1::5]
-
-    @property
     def url(self) -> str:
         return "http://127.0.0.1:8000/orders/{}/{}/".format(self.customer.id, self.id)
 
@@ -70,3 +64,7 @@ class Order(models.Model):
 
     def __str__(self) -> str:
         return f"{self.id} order"
+
+    def save(self, *args, **kwargs):
+        self.key = f"{(hash(self.created_at))}"[1::5]
+        super().save(*args, **kwargs)

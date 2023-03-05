@@ -5,7 +5,8 @@ from order.views import (OrderActiveListView,
                          OrderRetrieveUpdateDeleteView,
                          OrderCheckOutView,
                          OrderBookingSetupView,
-                         OrderBookingConfirmView, DeliveryManConfirmView, DeliveryManListView, DeliveryManListAllView)
+                         OrderBookingConfirmView, DeliveryManConfirmView, DeliveryManListView, DeliveryManListAllView,
+                         ManagerSellerAllOrdersView, ManagerSellerOrderView)
 
 urlpatterns = [
     path("<int:pk>/", OrderActiveListView.as_view(), name="orders_active_url"),
@@ -24,5 +25,9 @@ urlpatterns = [
     path("<int:pk>/<int:id>/delivery_manage/", DeliveryManConfirmView.as_view(), name="order_manage_url"),
     path("<int:pk>/delivery_manage/", DeliveryManListView.as_view(), name="list_of_customers_order"),
     path("delivery_manage/", DeliveryManListAllView.as_view(), name="list_of_all_opened_order"),
+
+
+    path("<int:pk>/sales_manager/", ManagerSellerAllOrdersView.as_view(), name="sales_manager_list"),
+    path("<int:pk>/<int:key>/sales_manager/", ManagerSellerOrderView.as_view(), name="sales_manager_retrieve"),
 
 ]

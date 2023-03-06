@@ -2,14 +2,16 @@ from datetime import datetime, timedelta
 
 from rest_framework import serializers
 
-from cart.serializers import PositionSerializer
-from order.constants import DELIVERY_STATUS
-
 from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
-from users.serializers import CustomerForManagerSerializer
+
+from cart.serializers import PositionSerializer
+from cart.models import Position
 
 from order.models import Order
+from order.constants import DELIVERY_STATUS
+
+from users.serializers import CustomerForManagerSerializer
 
 
 class SimpleOrderSerializer(serializers.ModelSerializer):
@@ -224,6 +226,13 @@ class ManagerSellerOrderSerializer(serializers.ModelSerializer):
         instance.in_progress = False
         instance.closed = True
         instance.is_paid = True
+
+        positions = Position.objects.filter(order=instance)
+        for position in positions:
+            product = position.product
+            product.amount -= position.amount
+            product.save()
+
         instance.save()
         return instance
 

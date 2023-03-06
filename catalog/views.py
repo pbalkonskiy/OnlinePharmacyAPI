@@ -18,7 +18,8 @@ from catalog.serializers import (SimpleProductSerializer,
                                  ProductSerializer, RatingSerializer, CommentCustomerSerializer,
                                  CommentManagerSerializer)
 from catalog.permissions import (IsCustomerOrReadOnly,
-                                 IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee, IsProductManagerOrCustomer)
+                                 IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee, IsProductManagerOrCustomer,
+                                 IsCustomerOwner)
 
 from cart.serializers import AddPositionSerializer
 from users.models import CommonUser
@@ -182,12 +183,6 @@ class CustomCommentsView(generics.GenericAPIView,
     serializer_class = CommentCustomerSerializer
     permission_classes = (IsProductManagerOrCustomer,)
 
-    def get_permissions(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            print(self.request.method)
-            return [IsCustomerOrReadOnly(), ]
-        return [IsProductManagerOrCustomer(), ]
-
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
@@ -213,6 +208,18 @@ class CustomCommentsView(generics.GenericAPIView,
         elif self.request.method == "GET" or hasattr(self.request.user, 'customer'):
             return self.create(request, *args, **kwargs)
 
+    def delete(self, request, *args, **kwargs):
+        serializer: CommentCustomerSerializer = self.get_serializer(data=request.data)
+        print(request.data, ': req')
+        if serializer.is_valid():
+            remove_comment_id = serializer.validated_data.get("remove_comment_id")
+            print(remove_comment_id)
+            print([comment.id for comment in self.get_queryset()])
+            remove_comment = generics.get_object_or_404(self.get_queryset(), id=remove_comment_id)
+            self.perform_destroy(remove_comment)
+            redirect_url = reverse("comment", kwargs={"slug": self.kwargs["slug"]})
+            return redirect(redirect_url)
+
     def get_queryset(self):
         product_id = Product.objects.filter(slug=self.kwargs["slug"]).first()
 
@@ -221,6 +228,14 @@ class CustomCommentsView(generics.GenericAPIView,
 
         elif self.request.method == "GET" or hasattr(self.request.user, 'customer'):
             return Comments.objects.filter(product=product_id, checked=True)
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            print(self.request.method)
+            return [IsCustomerOrReadOnly(), ]
+        if self.request.method == "DELETE":
+            return [IsCustomerOwner(), ]
+        return [IsProductManagerOrCustomer(), ]
 
     def get_serializer_context(self):
         context = super(CustomCommentsView, self).get_serializer_context()

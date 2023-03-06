@@ -46,3 +46,10 @@ class IsProductManagerOrCustomer(permissions.BasePermission):
         if hasattr(request.user, "customer"):
             return True
         return False
+
+
+class IsCustomerOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_authenticated:
+            return obj.customer == request.user.customer
+

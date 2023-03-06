@@ -1,5 +1,6 @@
 from typing import Dict
 
+from django.db.models import QuerySet
 from rest_framework import serializers
 
 from catalog.models import Product, Category, Manufacturer, Rating, Pharmacy, Comments
@@ -151,9 +152,10 @@ class CommentCustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
         fields = ["product", "commenters_name", "comment_field", "changed_at"]
-        lookup_field = "slug"
+        # lookup_field = "slug"
 
-    def get_product_name(self, obj: Comments):
+    @staticmethod
+    def get_product_name(obj: Comments):
         title = obj.product.title
         return title
 
@@ -175,14 +177,33 @@ class CommentCustomerSerializer(serializers.ModelSerializer):
 
 
 class CommentManagerSerializer(serializers.ModelSerializer):
-    product = serializers.SerializerMethodField('get_product_name', read_only=True)
+    product_name = serializers.CharField(source='product.title', read_only=True)
     commenters_name = serializers.CharField(read_only=True)
-    comment_field = serializers.CharField()
+    comment_field = serializers.CharField(read_only=True)
+    comments_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
 
     class Meta:
         model = Comments
-        fields = ["id", "product", "commenters_name", "comment_field"]
+        fields = ["id", "product_name", "commenters_name", "comment_field", "comments_ids"]
+        read_only_fields = ["product_name"]
+        lookup_field = "slug"
 
-    def get_product_name(self, obj: Comments):
-        title = obj.product.title
-        return title
+    # @staticmethod
+    # def get_product_name(obj):
+    #     return obj.first().product.title if obj.exists() else obj.product.title
+
+    def update(self, queryset: QuerySet[Comments], validated_data):
+        print(validated_data['comments_ids'])
+        approved_comment_ids = validated_data['comments_ids']
+
+        for instance in queryset:
+            if instance.id in approved_comment_ids:
+                instance.checked = True
+                instance.save()
+
+        unapproved_comment_ids: QuerySet[Comments] = queryset.filter(checked=False)
+        print(unapproved_comment_ids)
+        for instance in unapproved_comment_ids:
+            print(instance.id)
+            instance.delete()
+        return queryset

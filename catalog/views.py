@@ -1,3 +1,5 @@
+from django.shortcuts import redirect
+from django.urls import reverse
 from rest_framework import mixins, permissions
 from rest_framework import generics
 from rest_framework import filters
@@ -16,7 +18,7 @@ from catalog.serializers import (SimpleProductSerializer,
                                  ProductSerializer, RatingSerializer, CommentCustomerSerializer,
                                  CommentManagerSerializer)
 from catalog.permissions import (IsCustomerOrReadOnly,
-                                 IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee, IsProductManagerOrCustomet)
+                                 IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee, IsProductManagerOrCustomer)
 
 from cart.serializers import AddPositionSerializer
 from users.models import CommonUser
@@ -178,19 +180,38 @@ class CustomCommentsView(generics.GenericAPIView,
                          mixins.DestroyModelMixin):
     lookup_field = "slug"
     serializer_class = CommentCustomerSerializer
-    permission_classes = (IsProductManagerOrCustomet,)
+    permission_classes = (IsProductManagerOrCustomer,)
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             print(self.request.method)
             return [IsCustomerOrReadOnly(), ]
-        return [IsProductManagerOrCustomet(), ]
+        return [IsProductManagerOrCustomer(), ]
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        """
+        The first option works if the user is a manager and the update method is called
+
+        If the user is a customer, then the create method
+        """
+        if hasattr(self.request.user, 'employee') and self.request.user.employee.position == "content manager":
+
+            queryset = self.get_queryset()
+            serializer = CommentManagerSerializer(queryset, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                redirect_url = reverse("comment", kwargs={"slug": self.kwargs["slug"]})
+                return redirect(redirect_url)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            # return self.update(request, *args, **kwargs)
+
+        elif self.request.method == "GET" or hasattr(self.request.user, 'customer'):
+            return self.create(request, *args, **kwargs)
 
     def get_queryset(self):
         product_id = Product.objects.filter(slug=self.kwargs["slug"]).first()

@@ -39,7 +39,7 @@ class IsStuffOrEmployeeOrReadOnly(permissions.BasePermission):
         return False
 
 
-class IsProductManagerOrCustomet(permissions.BasePermission):
+class IsProductManagerOrCustomer(permissions.BasePermission):
     def has_permission(self, request, view):
         if hasattr(request.user, 'employee') and request.user.employee.position == "content manager":
             return True

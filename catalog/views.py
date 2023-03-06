@@ -1,4 +1,6 @@
-from rest_framework import mixins
+from django.shortcuts import redirect
+from django.urls import reverse
+from rest_framework import mixins, permissions
 from rest_framework import generics
 from rest_framework import filters
 from rest_framework import status
@@ -9,13 +11,14 @@ from django_filters import rest_framework
 
 from django.http.response import Http404
 
-from catalog.models import Product, Rating
+from catalog.models import Product, Rating, Comments
 from catalog.paginations import CatalogListPagination
 from catalog.filters import ProductFilter
 from catalog.serializers import (SimpleProductSerializer,
-                                 ProductSerializer, RatingSerializer)
+                                 ProductSerializer, RatingSerializer, CommentCustomerSerializer,
+                                 CommentManagerSerializer)
 from catalog.permissions import (IsCustomerOrReadOnly,
-                                 IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee)
+                                 IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee, IsProductManagerOrCustomer)
 
 from cart.serializers import AddPositionSerializer
 from users.models import CommonUser
@@ -168,3 +171,66 @@ class RatingListUpdateView(mixins.RetrieveModelMixin,
         queryset = self.get_queryset()
         obj = generics.get_object_or_404(queryset, slug=self.kwargs["slug"])
         return obj
+
+
+class CustomCommentsView(generics.GenericAPIView,
+                         mixins.ListModelMixin,
+                         mixins.CreateModelMixin,
+                         mixins.UpdateModelMixin,
+                         mixins.DestroyModelMixin):
+    lookup_field = "slug"
+    serializer_class = CommentCustomerSerializer
+    permission_classes = (IsProductManagerOrCustomer,)
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            print(self.request.method)
+            return [IsCustomerOrReadOnly(), ]
+        return [IsProductManagerOrCustomer(), ]
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """
+        The first option works if the user is a manager and the update method is called
+
+        If the user is a customer, then the create method
+        """
+        if hasattr(self.request.user, 'employee') and self.request.user.employee.position == "content manager":
+
+            queryset = self.get_queryset()
+            serializer = CommentManagerSerializer(queryset, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                redirect_url = reverse("comment", kwargs={"slug": self.kwargs["slug"]})
+                return redirect(redirect_url)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            # return self.update(request, *args, **kwargs)
+
+        elif self.request.method == "GET" or hasattr(self.request.user, 'customer'):
+            return self.create(request, *args, **kwargs)
+
+    def get_queryset(self):
+        product_id = Product.objects.filter(slug=self.kwargs["slug"]).first()
+
+        if hasattr(self.request.user, 'employee') and self.request.user.employee.position == "content manager":
+            return Comments.objects.filter(product=product_id, checked=False)
+
+        elif self.request.method == "GET" or hasattr(self.request.user, 'customer'):
+            return Comments.objects.filter(product=product_id, checked=True)
+
+    def get_serializer_context(self):
+        context = super(CustomCommentsView, self).get_serializer_context()
+        context['slug'] = self.kwargs["slug"]
+        return context
+
+    def get_serializer_class(self):
+
+        if hasattr(self.request.user, 'employee') and self.request.user.employee.position == "content manager":
+            return CommentManagerSerializer
+
+        elif self.request.method == "GET" or hasattr(self.request.user, 'customer'):
+            return self.serializer_class

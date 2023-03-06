@@ -2,9 +2,8 @@ from rest_framework import permissions
 
 
 class IsStaff(permissions.BasePermission):
-     def has_permission(self, request, view):
-          return True if (request.user.is_staff or request.user.is_superuser) else False
-
+    def has_permission(self, request, view):
+        return True if (request.user.is_staff or request.user.is_superuser) else False
 
 
 class IsStaffOrOwner(permissions.BasePermission):

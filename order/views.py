@@ -17,7 +17,7 @@ from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
 
 from order.models import Order
-from order.permissions import IsDELIVERYManager
+from order.permissions import IsDELIVERYManager, IsSELLERManager
 from order.tasks import check_order_payment_status, deactivate_overdue_order
 from order.stripe import create_stripe_order, confirm_payment_by_session
 from order.serializers import (OrderSerializer,
@@ -433,6 +433,7 @@ class ManagerSellerAllOrdersView(generics.GenericAPIView, mixins.ListModelMixin,
         filters.SearchFilter,
         filters.OrderingFilter
     )
+    permission_classes = (IsSELLERManager, )
     search_fields = ['key']
 
     def get(self, request, *args, **kwargs):
@@ -443,6 +444,7 @@ class ManagerSellerAllOrdersView(generics.GenericAPIView, mixins.ListModelMixin,
 
 
 class ManagerSellerOrderView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
+    permission_classes = (IsSELLERManager, )
     serializer_class = ManagerSellerOrderSerializer
     lookup_field = "key"
 
@@ -454,3 +456,4 @@ class ManagerSellerOrderView(generics.GenericAPIView, mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         return Order.objects.filter(Q(closed=False) & Q(pharmacy=self.kwargs["pk"]))
+

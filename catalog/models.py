@@ -126,3 +126,19 @@ class Pharmacy(models.Model):
         if self.opened_at <= time_now <= self.closed_at:
             return True
         return False
+
+
+class Comments(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comment')
+    customer = models.ForeignKey('users.Customer', on_delete=models.CASCADE, related_name='comment', null=True,
+                                 blank=True)
+    changed_at = models.DateTimeField(auto_now_add=True, auto_now=False)
+    comment_field = models.TextField()
+    checked = models.BooleanField(default=False)
+
+    @property
+    def commenters_name(self):
+        return f"{self.customer.user.slug}"
+
+    def __str__(self) -> str:
+        return self.product.title

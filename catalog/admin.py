@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from catalog.models import Product, Category, Manufacturer, Rating, Pharmacy
+from catalog.models import Product, Category, Manufacturer, Rating, Pharmacy, Comments
 
 
 @admin.register(Product)
@@ -33,6 +33,18 @@ class RatingAdmin(admin.ModelAdmin):
         "average_rating",
     )
     empty_value_display = "None"
+
+@admin.register(Comments)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "product",
+        "customer",
+        "changed_at",
+        "comment_field",
+        "checked",
+    )
+
 
 
 @admin.register(Category)

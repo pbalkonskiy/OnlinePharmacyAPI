@@ -1,8 +1,10 @@
 from typing import Dict
 
+from django.db.models import QuerySet
 from rest_framework import serializers
 
-from catalog.models import Product, Category, Manufacturer, Rating, Pharmacy
+from catalog.models import Product, Category, Manufacturer, Rating, Pharmacy, Comments
+from users.models import Customer
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
@@ -107,7 +109,7 @@ class SimpleProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "url", "title", "category", "brand", "price", "is_in_stock"]
+        fields = ["id", "url", "slug", "title", "category", "brand", "price", "is_in_stock"]
         # added 'is_in_stock' field in case the product in the cart position
         # is completely sold out to prevent it from getting into the order.
 
@@ -140,3 +142,68 @@ class PharmacySerializer(serializers.ModelSerializer):
     class Meta:
         model = Pharmacy
         fields = ["id", "address", "number", "opened_at", "closed_at", "is_opened"]
+
+
+class CommentCustomerSerializer(serializers.ModelSerializer):
+    product = serializers.SerializerMethodField('get_product_name', read_only=True)
+    commenters_name = serializers.CharField(read_only=True)
+    comment_field = serializers.CharField()
+
+    class Meta:
+        model = Comments
+        fields = ["product", "commenters_name", "comment_field", "changed_at"]
+        # lookup_field = "slug"
+
+    @staticmethod
+    def get_product_name(obj: Comments):
+        title = obj.product.title
+        return title
+
+    def create(self, validated_data):
+        try:
+            current_product = Product.objects.get(slug=self.context.get('slug'))
+        except Product.DoesNotExist:
+            return serializers.ValidationError("Product does not exist")
+
+        try:
+            current_customer: Customer = self.context['request'].user.customer
+        except KeyError:
+            return serializers.ValidationError("User is not logged in writable")
+
+        result = Comments.objects.create(product=current_product, customer=current_customer,
+                                         comment_field=validated_data['comment_field'])
+
+        return result
+
+
+class CommentManagerSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.title', read_only=True)
+    commenters_name = serializers.CharField(read_only=True)
+    comment_field = serializers.CharField(read_only=True)
+    comments_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
+
+    class Meta:
+        model = Comments
+        fields = ["id", "product_name", "commenters_name", "comment_field", "comments_ids"]
+        read_only_fields = ["product_name"]
+        lookup_field = "slug"
+
+    # @staticmethod
+    # def get_product_name(obj):
+    #     return obj.first().product.title if obj.exists() else obj.product.title
+
+    def update(self, queryset: QuerySet[Comments], validated_data):
+        print(validated_data['comments_ids'])
+        approved_comment_ids = validated_data['comments_ids']
+
+        for instance in queryset:
+            if instance.id in approved_comment_ids:
+                instance.checked = True
+                instance.save()
+
+        unapproved_comment_ids: QuerySet[Comments] = queryset.filter(checked=False)
+        print(unapproved_comment_ids)
+        for instance in unapproved_comment_ids:
+            print(instance.id)
+            instance.delete()
+        return queryset

@@ -20,7 +20,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ["title", "slug", "is_subcategory", "parent_title"]
-        lookup_field = "slug"  # purposely to add slug into the URL, have to add relevant attributes into views later.
+        lookup_field = "slug"
         extra_kwargs = {
             "url": {
                 "lookup_field": "slug"
@@ -183,10 +183,6 @@ class CommentManagerSerializer(serializers.ModelSerializer):
         fields = ["id", "product_name", "commenters_name", "comment_field", "comments_ids"]
         read_only_fields = ["product_name"]
         lookup_field = "slug"
-
-    # @staticmethod
-    # def get_product_name(obj):
-    #     return obj.first().product.title if obj.exists() else obj.product.title
 
     def update(self, queryset: QuerySet[Comments], validated_data):
         print(validated_data['comments_ids'])

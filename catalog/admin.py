@@ -34,6 +34,7 @@ class RatingAdmin(admin.ModelAdmin):
     )
     empty_value_display = "None"
 
+
 @admin.register(Comments)
 class CommentAdmin(admin.ModelAdmin):
     list_display = (
@@ -44,7 +45,6 @@ class CommentAdmin(admin.ModelAdmin):
         "comment_field",
         "checked",
     )
-
 
 
 @admin.register(Category)

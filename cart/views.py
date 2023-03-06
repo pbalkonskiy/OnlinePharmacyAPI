@@ -50,6 +50,7 @@ class CartRetrieveDeleteAllPositionsView(mixins.RetrieveModelMixin,
             return response.Response({'Error': 'The cart is empty!'}, status=404)
         order: Order = Order.objects.create(customer=request.user.customer)
         order.save()
+
         serializer = OrderAddSerializer(order)
         return response.Response(serializer.data)
 

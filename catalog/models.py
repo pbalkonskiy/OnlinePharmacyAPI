@@ -133,7 +133,7 @@ class Comments(models.Model):
     from users.models import Customer
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comment')
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='comment', null=True, blank=True)
-    changed_at = models.DateTimeField(auto_now=True)
+    changed_at = models.DateTimeField(auto_now_add=True, auto_now=False)
     comment_field = models.TextField()
     checked = models.BooleanField(default=False)
 

@@ -1,4 +1,4 @@
-from rest_framework import mixins
+from rest_framework import mixins, permissions
 from rest_framework import generics
 from rest_framework import filters
 from rest_framework import status
@@ -13,9 +13,10 @@ from catalog.models import Product, Rating, Comments
 from catalog.paginations import CatalogListPagination
 from catalog.filters import ProductFilter
 from catalog.serializers import (SimpleProductSerializer,
-                                 ProductSerializer, RatingSerializer, CommentSerializer)
+                                 ProductSerializer, RatingSerializer, CommentCustomerSerializer,
+                                 CommentManagerSerializer)
 from catalog.permissions import (IsCustomerOrReadOnly,
-                                 IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee)
+                                 IsStuffOrEmployeeOrReadOnly, IsStuffOrEmployee, IsProductManagerOrCustomet)
 
 from cart.serializers import AddPositionSerializer
 from users.models import CommonUser
@@ -176,7 +177,14 @@ class CustomCommentsView(generics.GenericAPIView,
                          mixins.UpdateModelMixin,
                          mixins.DestroyModelMixin):
     lookup_field = "slug"
-    serializer_class = CommentSerializer
+    serializer_class = CommentCustomerSerializer
+    permission_classes = (IsProductManagerOrCustomet,)
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            print(self.request.method)
+            return [IsCustomerOrReadOnly(), ]
+        return [IsProductManagerOrCustomet(), ]
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -186,10 +194,22 @@ class CustomCommentsView(generics.GenericAPIView,
 
     def get_queryset(self):
         product_id = Product.objects.filter(slug=self.kwargs["slug"]).first()
-        return Comments.objects.filter(product=product_id, checked=True)
 
+        if hasattr(self.request.user, 'employee') and self.request.user.employee.position == "content manager":
+            return Comments.objects.filter(product=product_id, checked=False)
+
+        elif self.request.method == "GET" or hasattr(self.request.user, 'customer'):
+            return Comments.objects.filter(product=product_id, checked=True)
 
     def get_serializer_context(self):
         context = super(CustomCommentsView, self).get_serializer_context()
         context['slug'] = self.kwargs["slug"]
         return context
+
+    def get_serializer_class(self):
+
+        if hasattr(self.request.user, 'employee') and self.request.user.employee.position == "content manager":
+            return CommentManagerSerializer
+
+        elif self.request.method == "GET" or hasattr(self.request.user, 'customer'):
+            return self.serializer_class

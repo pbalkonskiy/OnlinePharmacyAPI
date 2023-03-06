@@ -143,14 +143,14 @@ class PharmacySerializer(serializers.ModelSerializer):
         fields = ["id", "address", "number", "opened_at", "closed_at", "is_opened"]
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class CommentCustomerSerializer(serializers.ModelSerializer):
     product = serializers.SerializerMethodField('get_product_name', read_only=True)
     commenters_name = serializers.CharField(read_only=True)
     comment_field = serializers.CharField()
 
     class Meta:
         model = Comments
-        fields = ["id", "product", "commenters_name", "comment_field"]
+        fields = ["product", "commenters_name", "comment_field", "changed_at"]
         lookup_field = "slug"
 
     def get_product_name(self, obj: Comments):
@@ -166,9 +166,23 @@ class CommentSerializer(serializers.ModelSerializer):
         try:
             current_customer: Customer = self.context['request'].user.customer
         except KeyError:
-            return serializers.ValidationError("User is not logged in")
+            return serializers.ValidationError("User is not logged in writable")
 
         result = Comments.objects.create(product=current_product, customer=current_customer,
                                          comment_field=validated_data['comment_field'])
 
         return result
+
+
+class CommentManagerSerializer(serializers.ModelSerializer):
+    product = serializers.SerializerMethodField('get_product_name', read_only=True)
+    commenters_name = serializers.CharField(read_only=True)
+    comment_field = serializers.CharField()
+
+    class Meta:
+        model = Comments
+        fields = ["id", "product", "commenters_name", "comment_field"]
+
+    def get_product_name(self, obj: Comments):
+        title = obj.product.title
+        return title

@@ -1,6 +1,5 @@
 from rest_framework import generics, permissions, mixins
 from rest_framework import permissions
-from rest_framework.views import APIView
 
 from users.models import Customer, Employee
 from users.permissions import IsStaff, IsStaffOrOwner

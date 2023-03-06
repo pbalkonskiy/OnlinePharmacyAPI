@@ -145,19 +145,15 @@ class PharmacySerializer(serializers.ModelSerializer):
 
 
 class CommentCustomerSerializer(serializers.ModelSerializer):
-    product = serializers.SerializerMethodField('get_product_name', read_only=True)
+    remove_comment_id = serializers.IntegerField(write_only=True, required=False)
+    product_name = serializers.CharField(source='product.title', read_only=True)
     commenters_name = serializers.CharField(read_only=True)
-    comment_field = serializers.CharField()
+    comment_field = serializers.CharField(required=False)
 
     class Meta:
         model = Comments
-        fields = ["product", "commenters_name", "comment_field", "changed_at"]
+        fields = ["id", "product_name", "commenters_name", "comment_field", "changed_at", "remove_comment_id"]
         # lookup_field = "slug"
-
-    @staticmethod
-    def get_product_name(obj: Comments):
-        title = obj.product.title
-        return title
 
     def create(self, validated_data):
         try:

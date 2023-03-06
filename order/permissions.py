@@ -23,3 +23,5 @@ class IsSELLERManager(permissions.BasePermission):
         if request.user.is_superuser or is_delivery_manager:
             return True
         return False
+
+

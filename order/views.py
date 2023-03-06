@@ -1,7 +1,5 @@
 import os
 import stripe
-from django.db.models import Q
-from django_filters import rest_framework
 
 from rest_framework import generics
 from rest_framework import status
@@ -12,19 +10,24 @@ from rest_framework import filters
 from django.urls import reverse
 from django.shortcuts import redirect
 from django.forms import model_to_dict
+from django.db.models import Q
 
 from catalog.models import Pharmacy
 from catalog.serializers import PharmacySerializer
 
+from cart.models import Position
+
 from order.models import Order
-from order.permissions import IsDELIVERYManager, IsSELLERManager
+from order.permissions import IsDeliveryManager, IsSellerManager
 from order.tasks import check_order_payment_status, deactivate_overdue_order
 from order.stripe import create_stripe_order, confirm_payment_by_session
 from order.serializers import (OrderSerializer,
                                SimpleOrderSerializer,
                                OrderCheckOutSerializer,
                                OrderAddSerializer,
-                               OrderBookingSerializer, DeliveryManConfirmSerializer, ManagerSellerOrderSerializer)
+                               OrderBookingSerializer,
+                               DeliveryManConfirmSerializer,
+                               ManagerSellerOrderSerializer)
 
 from cart.permissions import IsCustomerOwner
 
@@ -84,9 +87,9 @@ class OrderRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
     parameters and move to the payment system.
     """
     serializer_class = OrderSerializer
-    # permission_classes = (
-    #     IsCustomerOwner,
-    # )
+    permission_classes = (
+        IsCustomerOwner,
+    )
     lookup_field = "id"
 
     def get(self, request, *args, **kwargs):
@@ -227,6 +230,13 @@ class OrderCheckOutView(mixins.RetrieveModelMixin,
                     order.is_paid = True
                     order.delivery_status = "Packed in stock"
                     order.payment_status = "Successfully paid"
+
+                    positions = Position.objects.filter(order=order)
+                    for position in positions:
+                        product = position.product
+                        product.amount -= position.amount
+                        product.save()
+
                     order.save()
 
                     return redirect(checkout_session.url, code=status.HTTP_201_CREATED)
@@ -268,9 +278,9 @@ class OrderBookingSetupView(mixins.ListModelMixin,
     """
 
     serializer_class = OrderSerializer
-    # permission_classes = (
-    #     IsCustomerOwner,
-    # )
+    permission_classes = (
+        IsCustomerOwner,
+    )
     lookup_field = "id"
 
     def get(self, request, *args, **kwargs):
@@ -342,10 +352,10 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
     View for order booking confirmation or order deletion.
     """
 
-    # serializer_class = OrderSerializer
-    # permission_classes = (
-    #     IsCustomerOwner,
-    # )
+    serializer_class = OrderSerializer
+    permission_classes = (
+        IsCustomerOwner,
+    )
     lookup_field = "id"
 
     def get(self, request, *args, **kwargs):
@@ -381,9 +391,10 @@ class OrderBookingConfirmView(mixins.RetrieveModelMixin,
         return Order.objects.filter(customer_id=self.kwargs["pk"])
 
 
-class DeliveryManListAllView(generics.GenericAPIView, mixins.ListModelMixin):
+class DeliveryManListAllView(generics.GenericAPIView,
+                             mixins.ListModelMixin):
     serializer_class = DeliveryManConfirmSerializer
-    permission_classes = (IsDELIVERYManager,)
+    permission_classes = (IsDeliveryManager,)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -395,7 +406,9 @@ class DeliveryManListAllView(generics.GenericAPIView, mixins.ListModelMixin):
 class DeliveryManListView(mixins.ListModelMixin,
                           generics.GenericAPIView):
     serializer_class = DeliveryManConfirmSerializer
-    permission_classes = (IsDELIVERYManager,)
+    permission_classes = (
+        IsDeliveryManager,
+    )
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -412,9 +425,11 @@ class DeliveryManConfirmView(mixins.RetrieveModelMixin,
     view for delivery confirmation
     """
 
-    lookup_field = "id"
     serializer_class = DeliveryManConfirmSerializer
-    permission_classes = (IsDELIVERYManager,)
+    permission_classes = (
+        IsDeliveryManager,
+    )
+    lookup_field = "id"
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
@@ -426,14 +441,17 @@ class DeliveryManConfirmView(mixins.RetrieveModelMixin,
         return Order.objects.filter(Q(customer_id=self.kwargs["pk"]) & Q(closed=False))
 
 
-class ManagerSellerAllOrdersView(generics.GenericAPIView, mixins.ListModelMixin, mixins.UpdateModelMixin):
+class ManagerSellerAllOrdersView(generics.GenericAPIView,
+                                 mixins.ListModelMixin,
+                                 mixins.UpdateModelMixin):
     serializer_class = ManagerSellerOrderSerializer
     filter_backends = (
-        # rest_framework.DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter
     )
-    permission_classes = (IsSELLERManager, )
+    permission_classes = (
+        IsSellerManager,
+    )
     search_fields = ['key']
 
     def get(self, request, *args, **kwargs):
@@ -443,9 +461,13 @@ class ManagerSellerAllOrdersView(generics.GenericAPIView, mixins.ListModelMixin,
         return Order.objects.filter(Q(pharmacy=self.kwargs["pk"]) & Q(closed=False))
 
 
-class ManagerSellerOrderView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
-    permission_classes = (IsSELLERManager, )
+class ManagerSellerOrderView(generics.GenericAPIView,
+                             mixins.RetrieveModelMixin,
+                             mixins.UpdateModelMixin):
     serializer_class = ManagerSellerOrderSerializer
+    permission_classes = (
+        IsSellerManager,
+    )
     lookup_field = "key"
 
     def get(self, request, *args, **kwargs):
@@ -456,4 +478,3 @@ class ManagerSellerOrderView(generics.GenericAPIView, mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         return Order.objects.filter(Q(closed=False) & Q(pharmacy=self.kwargs["pk"]))
-

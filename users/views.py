@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, mixins
+from rest_framework import generics, mixins
 from rest_framework import permissions
 
 from users.models import Customer, Employee
@@ -11,7 +11,7 @@ from users.serializers import CustomerSerializer, EmployeeSerializer
 class CustomerViewList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [IsStaff]  # need to be AdminUser
+    permission_classes = [IsStaff]
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -56,9 +56,9 @@ class EmployeeViewList(mixins.ListModelMixin, generics.GenericAPIView):
 class EmployeeCreateView(mixins.RetrieveModelMixin, generics.CreateAPIView):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-    # permission_classes = [
-    #     permissions.IsAdminUser
-    # ]
+    permission_classes = [
+        permissions.IsAdminUser
+    ]
 
 
 class EmployeeRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,

@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 
-class IsDELIVERYManager(permissions.BasePermission):
+class IsDeliveryManager(permissions.BasePermission):
     def has_permission(self, request, view):
         try:
             is_delivery_manager = request.user.employee.position == "delivery manager"
@@ -13,7 +13,7 @@ class IsDELIVERYManager(permissions.BasePermission):
         return False
 
 
-class IsSELLERManager(permissions.BasePermission):
+class IsSellerManager(permissions.BasePermission):
 
     def has_permission(self, request, view):
         try:
